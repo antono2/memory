@@ -1,5 +1,7 @@
 # Generic object pool in V
 
+[Project portfolio](https://oreskin.de/projects_en.php) · [Support independent development](https://oreskin.de/dono_en.php)
+
 A compact example of a fixed-size, generic object pool written in
 [V](https://vlang.io). It models game actors, but the pool can be adapted for
 particles, projectiles, temporary buffers, or other frequently reused values.
