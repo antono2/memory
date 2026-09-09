@@ -1,6 +1,6 @@
 # Generic object pool in V
 
-[Project portfolio](https://oreskin.de/projects_en.php) · [Support independent development](https://oreskin.de/dono_en.php)
+[Project portfolio](https://oreskin.de/projects_en.php)
 
 A compact example of a fixed-size, generic object pool written in
 [V](https://vlang.io). It models game actors, but the pool can be adapted for
@@ -59,3 +59,7 @@ IDs for detecting stale references.
 v fmt -verify generic_pool.v generic_pool_test.v
 v test .
 ```
+
+## License
+
+This project is available under the [MIT License](LICENSE).
