@@ -1,6 +1,6 @@
 module main
 
-import memory
+import antono2.memory
 
 fn main() {
 	mut frame_memory := []u8{len: 1024}

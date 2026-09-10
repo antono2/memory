@@ -13,16 +13,22 @@ the same core without making the general-purpose module Vulkan-specific.
 ## Install
 
 ```sh
-v install https://github.com/antono2/memory
+v install antono2.memory
 ```
 
-Then import it using its module name:
+Until the VPM entry is published, the same release can be installed directly:
+
+```sh
+v install https://github.com/antono2/memory@v1.0.1
+```
+
+Then import it using its canonical VPM name:
 
 ```v
-import memory
+import antono2.memory
 ```
 
-The 1.x release line uses `memory` as both the repository and V import name.
+The 1.x release line uses `antono2.memory` as its VPM and import name.
 Projects that still import `generic_pool` should pin the 0.2.0 release until
 they are ready to update their imports.
 
@@ -32,7 +38,7 @@ Create a pool once, insert values until it reaches its fixed capacity, and use
 the returned handle for later access or release:
 
 ```v
-import memory
+import antono2.memory
 
 struct Particle {
 mut:
@@ -76,7 +82,7 @@ top of checked leases. Its factory runs only when no reusable value is available
 and the fixed capacity has not been reached.
 
 ```v
-import memory
+import antono2.memory
 
 struct Buffer {
 mut:
@@ -120,7 +126,7 @@ owning the resource itself. It uses deterministic first fit, returns checked
 allocation records, and coalesces adjacent ranges when they are released.
 
 ```v
-import memory
+import antono2.memory
 
 fn main() {
 	mut block := memory.new_range_allocator(256 * 1024 * 1024)
@@ -151,7 +157,7 @@ lifetime. Individual ranges are not released; `reset()` invalidates all of them
 at once while preserving the peak-use statistic.
 
 ```v
-import memory
+import antono2.memory
 
 fn main() {
 	mut frame_arena := memory.new_linear_allocator(4 * 1024 * 1024)
@@ -178,7 +184,7 @@ the same order they were created. It is designed for staging buffers, streaming
 data, and resources whose lifetime follows a GPU submission or producer queue.
 
 ```v
-import memory
+import antono2.memory
 
 fn main() {
 	mut uploads := memory.new_ring_allocator(64 * 1024 * 1024)

@@ -1,6 +1,6 @@
 module main
 
-import memory
+import antono2.memory
 
 fn main() {
 	mut staging_buffer := []u8{len: 64}
