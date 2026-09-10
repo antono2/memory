@@ -10,7 +10,8 @@ allocators, along with a power-of-two buddy allocator for specialized arenas.
 Each implementation is dependency-free and accompanied by a
 directly runnable example. Optional Vulkan suballocation examples can build on
 the same core without making the general-purpose module Vulkan-specific.
-The allocator test suite runs on Linux, macOS, and Windows.
+The allocator test suite and public-import examples run on Linux, macOS, and
+Windows.
 
 ## Install
 

@@ -35,10 +35,25 @@ jobs:
       matrix:
         os: [macos-14, windows-2022]
     runs-on: ${{ matrix.os }}
+    env:
+      VMODULES: ${{ github.workspace }}/modules
+    defaults:
+      run:
+        working-directory: modules/antono2/mem
     steps:
       - uses: actions/checkout@v7
+        with:
+          path: modules/antono2/mem
       - uses: prantlf/setup-v-action@v4
         with:
           version: 0.5.2
       - name: Run allocator tests
         run: v test .
+      - name: Run public API examples
+        run: |
+          v run examples/object_pool
+          v run examples/buffer_pool
+          v run examples/range_allocator
+          v run examples/linear_allocator
+          v run examples/ring_allocator
+          v run examples/buddy_allocator
