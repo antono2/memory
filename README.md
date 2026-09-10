@@ -1,9 +1,9 @@
-# Generic pools and allocators for V
+# Memory management building blocks for V
 
-[![CI](https://github.com/antono2/v_generic_pool/actions/workflows/ci.yml/badge.svg)](https://github.com/antono2/v_generic_pool/actions/workflows/ci.yml)
+[![CI](https://github.com/antono2/memory/actions/workflows/ci.yml/badge.svg)](https://github.com/antono2/memory/actions/workflows/ci.yml)
 
-`generic_pool` provides small, documented, and tested building blocks
-for reusing objects and managing bounded resources in V.
+`memory` provides small, documented, and tested building blocks for reusing
+objects and managing bounded memory and resource ranges in V.
 
 The library includes checked slot and object pools plus range, linear, and ring
 allocators. Each implementation is dependency-free and accompanied by a
@@ -13,7 +13,7 @@ the same core without making the general-purpose module Vulkan-specific.
 ## Install
 
 ```sh
-v install https://github.com/antono2/v_generic_pool
+v install https://github.com/antono2/memory
 ```
 
 Then import it using its VPM name:
@@ -21,6 +21,9 @@ Then import it using its VPM name:
 ```v
 import generic_pool
 ```
+
+The import name remains `generic_pool` for compatibility with the `0.2.x`
+release line even though the repository now has the broader `memory` name.
 
 ## Slot pool
 
