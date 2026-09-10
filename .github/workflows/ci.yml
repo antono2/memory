@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: vlang/setup-v@v1.7
+        with:
+          stable: true
+          check-latest: true
+      - name: Verify formatting
+        run: v fmt -verify .
+      - name: Vet
+        run: v vet .
+      - name: Test
+        run: v test .
+      - name: Run examples
+        run: ./scripts/run_examples.sh
