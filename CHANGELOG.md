@@ -2,11 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.2 - 2026-09-10
+
+- Correct pre-VPM source installation instructions for V 0.5.2, which requires
+  dotted modules to be cloned into their canonical nested module path.
+
 ## 1.0.1 - 2026-09-10
 
 - Use the canonical `antono2.memory` VPM name and import path so V installs the
   module under `~/.vmodules/antono2/memory`.
-- Document both VPM and version-pinned direct installation.
+- Document the canonical VPM installation and import names.
 
 ## 1.0.0 - 2026-09-10
 
