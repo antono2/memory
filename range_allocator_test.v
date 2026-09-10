@@ -1,4 +1,4 @@
-module generic_pool
+module memory
 
 fn test_range_allocator_aligns_tracks_and_coalesces() {
 	mut allocator := new_range_allocator(128)

@@ -1,6 +1,6 @@
 module main
 
-import generic_pool
+import memory
 
 struct MovingActor {
 	name string = 'MovingActor'
@@ -20,8 +20,9 @@ fn reset_moving_actor(actor MovingActor) MovingActor {
 }
 
 fn main() {
-	mut actors := generic_pool.new_object_pool[MovingActor](2, 1, make_moving_actor,
-		reset_moving_actor) or { panic(err) }
+	mut actors := memory.new_object_pool[MovingActor](2, 1, make_moving_actor, reset_moving_actor) or {
+		panic(err)
+	}
 
 	actor_handle := actors.acquire() or { panic(err) }
 	mut actor := actors.get_mut(actor_handle) or { panic('actor handle became stale') }

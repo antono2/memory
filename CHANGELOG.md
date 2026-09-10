@@ -2,10 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.0.0 - 2026-09-10
 
-- Update repository metadata and installation instructions for the new
-  `antono2/memory` name while retaining the `generic_pool` import name.
+- Rename the V module and public import from `generic_pool` to `memory`, matching
+  the repository name. Projects retaining the old import can pin v0.2.0.
+- Update repository metadata and installation instructions for the
+  `antono2/memory` name.
 - Document the production-shaped Vulkan block-suballocation integration in
   `antono2.vkmemalloc`.
 - Document the Vulkan persistent upload-ring integration built on

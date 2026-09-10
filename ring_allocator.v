@@ -1,4 +1,4 @@
-module generic_pool
+module memory
 
 struct RingRecord {
 	id             u64

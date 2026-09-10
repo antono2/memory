@@ -16,14 +16,15 @@ the same core without making the general-purpose module Vulkan-specific.
 v install https://github.com/antono2/memory
 ```
 
-Then import it using its VPM name:
+Then import it using its module name:
 
 ```v
-import generic_pool
+import memory
 ```
 
-The import name remains `generic_pool` for compatibility with the `0.2.x`
-release line even though the repository now has the broader `memory` name.
+The 1.x release line uses `memory` as both the repository and V import name.
+Projects that still import `generic_pool` should pin the 0.2.0 release until
+they are ready to update their imports.
 
 ## Slot pool
 
@@ -31,7 +32,7 @@ Create a pool once, insert values until it reaches its fixed capacity, and use
 the returned handle for later access or release:
 
 ```v
-import generic_pool
+import memory
 
 struct Particle {
 mut:
@@ -40,7 +41,7 @@ mut:
 }
 
 fn main() {
-	mut particles := generic_pool.new_slot_pool[Particle](128) or { panic(err) }
+	mut particles := memory.new_slot_pool[Particle](128) or { panic(err) }
 	handle := particles.insert(Particle{x: 10, y: 20}) or { panic(err) }
 
 	mut particle := particles.get_mut(handle) or { panic('stale particle handle') }
@@ -75,7 +76,7 @@ top of checked leases. Its factory runs only when no reusable value is available
 and the fixed capacity has not been reached.
 
 ```v
-import generic_pool
+import memory
 
 struct Buffer {
 mut:
@@ -93,7 +94,7 @@ fn reset_buffer(buffer Buffer) Buffer {
 }
 
 fn main() {
-	mut buffers := generic_pool.new_object_pool[Buffer](16, 4, make_buffer,
+	mut buffers := memory.new_object_pool[Buffer](16, 4, make_buffer,
 		reset_buffer) or { panic(err) }
 
 	handle := buffers.acquire() or { panic(err) }
@@ -119,10 +120,10 @@ owning the resource itself. It uses deterministic first fit, returns checked
 allocation records, and coalesces adjacent ranges when they are released.
 
 ```v
-import generic_pool
+import memory
 
 fn main() {
-	mut block := generic_pool.new_range_allocator(256 * 1024 * 1024)
+	mut block := memory.new_range_allocator(256 * 1024 * 1024)
 	vertex_memory := block.allocate(48 * 1024, 256) or { panic(err) }
 
 	println('bind at offset ${vertex_memory.offset}')
@@ -150,10 +151,10 @@ lifetime. Individual ranges are not released; `reset()` invalidates all of them
 at once while preserving the peak-use statistic.
 
 ```v
-import generic_pool
+import memory
 
 fn main() {
-	mut frame_arena := generic_pool.new_linear_allocator(4 * 1024 * 1024)
+	mut frame_arena := memory.new_linear_allocator(4 * 1024 * 1024)
 	vertices := frame_arena.allocate(96 * 1024, 16) or { panic(err) }
 	uniforms := frame_arena.allocate(256, 256) or { panic(err) }
 
@@ -177,10 +178,10 @@ the same order they were created. It is designed for staging buffers, streaming
 data, and resources whose lifetime follows a GPU submission or producer queue.
 
 ```v
-import generic_pool
+import memory
 
 fn main() {
-	mut uploads := generic_pool.new_ring_allocator(64 * 1024 * 1024)
+	mut uploads := memory.new_ring_allocator(64 * 1024 * 1024)
 	frame_0 := uploads.allocate(4 * 1024, 256) or { panic(err) }
 	frame_1 := uploads.allocate(8 * 1024, 256) or { panic(err) }
 
