@@ -1,4 +1,4 @@
-module generic_pool
+module memory
 
 // LinearAllocation identifies one aligned range from a LinearAllocator. It is
 // valid until the allocator is reset.

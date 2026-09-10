@@ -1,4 +1,4 @@
-module generic_pool
+module memory
 
 struct FreeRange {
 mut:

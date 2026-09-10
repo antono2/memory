@@ -1,6 +1,6 @@
 module main
 
-import generic_pool
+import memory
 
 struct Buffer {
 mut:
@@ -20,7 +20,7 @@ fn reset_buffer(buffer Buffer) Buffer {
 }
 
 fn main() {
-	mut buffers := generic_pool.new_object_pool[Buffer](16, 4, make_buffer, reset_buffer) or {
+	mut buffers := memory.new_object_pool[Buffer](16, 4, make_buffer, reset_buffer) or {
 		panic(err)
 	}
 
