@@ -16,11 +16,16 @@ the same core without making the general-purpose module Vulkan-specific.
 v install antono2.memory
 ```
 
-Until the VPM entry is published, the same release can be installed directly:
+Before the VPM entry is published, clone the release into V's canonical nested
+module path:
 
 ```sh
-v install https://github.com/antono2/memory@v1.0.1
+mkdir -p ~/.vmodules/antono2
+git clone --branch v1.0.2 https://github.com/antono2/memory \
+	~/.vmodules/antono2/memory
 ```
+
+V 0.5.2 cannot infer that nested path from an unregistered Git URL alone.
 
 Then import it using its canonical VPM name:
 
@@ -28,7 +33,7 @@ Then import it using its canonical VPM name:
 import antono2.memory
 ```
 
-The 1.x release line uses `antono2.memory` as its VPM and import name.
+The current 1.x release uses `antono2.memory` as its VPM and import name.
 Projects that still import `generic_pool` should pin the 0.2.0 release until
 they are ready to update their imports.
 
