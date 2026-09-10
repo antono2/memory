@@ -1,5 +1,5 @@
 Module {
-	name: 'antono2.generic_pool'
+	name: 'generic_pool'
 	author: 'Anton Oreskin'
 	description: 'Reusable pools and allocation algorithms for V'
 	version: '0.2.0'
