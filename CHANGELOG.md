@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 - Add deterministic object-pool lifecycle stress coverage.
 - Add reproducible optimized churn benchmarks for every allocation strategy,
   including fragmentation and occupancy diagnostics.
+- Replay an identical bounded allocation trace for first-fit and buddy benchmark
+  comparisons, with success, failure, peak-use, and trace-integrity diagnostics.
 - Run the allocator test suite on Linux, macOS, and Windows in CI.
 
 ## 1.0.3 - 2026-09-10
