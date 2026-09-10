@@ -13,7 +13,8 @@ All notable changes to this project will be documented in this file.
   including fragmentation and occupancy diagnostics.
 - Replay an identical bounded allocation trace for first-fit and buddy benchmark
   comparisons, with success, failure, peak-use, and trace-integrity diagnostics.
-- Run the allocator test suite on Linux, macOS, and Windows in CI.
+- Run the allocator test suite and canonical `antono2.mem` public-import
+  examples on Linux, macOS, and Windows in CI.
 
 ## 1.0.3 - 2026-09-10
 
