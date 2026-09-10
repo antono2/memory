@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Update repository metadata and installation instructions for the new
+  `antono2/memory` name while retaining the `generic_pool` import name.
 - Document the production-shaped Vulkan block-suballocation integration in
   `antono2.vkmemalloc`.
 
