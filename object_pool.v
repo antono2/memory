@@ -1,4 +1,4 @@
-module memory
+module mem
 
 // ObjectFactory creates one value when an ObjectPool has no reusable value
 // available.

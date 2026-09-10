@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.3 - 2026-09-10
+
+- Use `antono2.mem` consistently as the VPM package, import, repository, and
+  installed-directory identity.
+- Rename the source module declaration from `memory` to `mem` to match V's
+  required leaf-directory name.
+
 ## 1.0.2 - 2026-09-10
 
 - Correct pre-VPM source installation instructions for V 0.5.2, which requires

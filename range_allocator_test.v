@@ -1,4 +1,4 @@
-module memory
+module mem
 
 fn test_range_allocator_aligns_tracks_and_coalesces() {
 	mut allocator := new_range_allocator(128)

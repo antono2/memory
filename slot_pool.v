@@ -1,4 +1,4 @@
-module memory
+module mem
 
 // Handle identifies one occupied slot at a specific generation.
 //
