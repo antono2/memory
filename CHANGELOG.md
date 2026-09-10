@@ -11,5 +11,7 @@ All notable changes to this project will be documented in this file.
   and bulk release.
 - Add an aligned, coalescing `RangeAllocator` for suballocating offsets in host
   buffers, mapped files, shared memory, and GPU memory blocks.
+- Add an O(1) aligned `LinearAllocator` for frame- and phase-scoped temporary
+  ranges, including payload, padding, remaining, and peak-use statistics.
 - Move the actor demonstration to `examples/object_pool`.
 - Add automated formatting, vetting, tests, and example execution.
