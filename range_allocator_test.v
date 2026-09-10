@@ -196,3 +196,78 @@ fn assert_range_allocator_invariants(allocator &RangeAllocator, active []RangeAl
 	}
 	assert free_total == allocator.free_bytes()
 }
+
+fn model_first_fit(occupied []bool, size int, alignment int) ?int {
+	if size <= 0 || alignment <= 0 || size > occupied.len {
+		return none
+	}
+	for offset in 0 .. occupied.len - size + 1 {
+		if offset % alignment != 0 {
+			continue
+		}
+		mut available := true
+		for index in offset .. offset + size {
+			if occupied[index] {
+				available = false
+				break
+			}
+		}
+		if available {
+			return offset
+		}
+	}
+	return none
+}
+
+fn test_range_allocator_matches_bitmap_first_fit_model() {
+	capacity := 257
+	alignments := [1, 2, 3, 4, 5, 8, 16, 31]
+	mut allocator := new_range_allocator(u64(capacity))
+	mut occupied := []bool{len: capacity}
+	mut active := []RangeAllocation{}
+	mut state := u32(0xc001d00d)
+
+	for step in 0 .. 20_000 {
+		state = state * 1_664_525 + 1_013_904_223
+		if active.len > 0 && state % 3 == 0 {
+			index := int((state >> 8) % u32(active.len))
+			allocation := active[index]
+			assert allocator.release(allocation)
+			for byte_index in int(allocation.offset) .. int(allocation.end()) {
+				assert occupied[byte_index]
+				occupied[byte_index] = false
+			}
+			active.delete(index)
+		} else {
+			size := 1 + int((state >> 16) % 37)
+			alignment := alignments[int((state >> 24) % u32(alignments.len))]
+			if expected_offset := model_first_fit(occupied, size, alignment) {
+				allocation := allocator.allocate(u64(size), u64(alignment)) or {
+					panic('model found offset ${expected_offset}, allocator failed: ${err}')
+				}
+				assert allocation.offset == u64(expected_offset)
+				for byte_index in expected_offset .. expected_offset + size {
+					assert !occupied[byte_index]
+					occupied[byte_index] = true
+				}
+				active << allocation
+			} else {
+				if allocation := allocator.allocate(u64(size), u64(alignment)) {
+					assert false, 'allocator returned unexpected range at ${allocation.offset}'
+				}
+			}
+		}
+
+		if step % 100 == 0 {
+			mut model_used := u64(0)
+			for byte_is_used in occupied {
+				if byte_is_used {
+					model_used++
+				}
+			}
+			assert allocator.used_bytes() == model_used
+			assert allocator.free_bytes() == u64(capacity) - model_used
+			assert_range_allocator_invariants(allocator, active)
+		}
+	}
+}

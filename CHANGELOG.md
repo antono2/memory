@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Add an independent bitmap-model stress test for deterministic first-fit range
+  allocation under fragmentation.
+- Add deterministic object-pool lifecycle stress coverage.
+- Add reproducible optimized churn benchmarks for every allocation strategy,
+  including fragmentation and occupancy diagnostics.
+
 ## 1.0.3 - 2026-09-10
 
 - Use `antono2.mem` consistently as the VPM package, import, repository, and

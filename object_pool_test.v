@@ -128,3 +128,46 @@ fn test_object_pool_rejects_foreign_handles() {
 	assert first_pool.contains(first)
 	assert second_pool.contains(second)
 }
+
+fn test_object_pool_deterministic_lifecycle_stress() {
+	capacity := 17
+	mut pool := new_object_pool[ReusableItem](capacity, 3, make_reusable_item, reset_reusable_item) or {
+		panic(err)
+	}
+	mut active := []Handle{cap: capacity}
+	mut stale := []Handle{}
+	mut state := u32(0x0b1ec700)
+
+	for step in 0 .. 10_000 {
+		state = state * 1_664_525 + 1_013_904_223
+		if step > 0 && step % 211 == 0 {
+			stale << active
+			assert pool.release_all() == active.len
+			active.clear()
+		} else if active.len == capacity || (active.len > 0 && state % 3 == 0) {
+			index := int((state >> 8) % u32(active.len))
+			handle := active[index]
+			assert pool.release(handle)
+			assert !pool.release(handle)
+			assert !pool.contains(handle)
+			stale << handle
+			active.delete(index)
+		} else {
+			handle := pool.acquire() or { panic(err) }
+			mut item := pool.get_mut(handle) or { panic('new lease was rejected') }
+			item.value = step
+			item.label = 'active-${step}'
+			active << handle
+		}
+
+		assert pool.len() == active.len
+		assert pool.created_count() <= capacity
+		assert pool.available_count() + pool.len() == pool.created_count()
+		for handle in active {
+			assert pool.contains(handle)
+		}
+		if stale.len > 0 {
+			assert !pool.contains(stale[stale.len - 1])
+		}
+	}
+}
