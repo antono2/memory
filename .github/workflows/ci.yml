@@ -16,8 +16,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: vlang/setup-v@v1.7
         with:
-          stable: true
-          check-latest: true
+          version: 0.5.2
       - name: Verify formatting
         run: v fmt -verify .
       - name: Vet
