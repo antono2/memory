@@ -196,6 +196,22 @@ is strictly FIFO: attempting to release a newer live allocation returns
 free space, peak occupancy, allocation count, and the largest currently usable
 contiguous region.
 
+## Vulkan integration
+
+[`antono2.vkmemalloc`](https://github.com/antono2/vulkan_memory_allocator) is a
+directly usable Vulkan integration built on `RangeAllocator`. It suballocates
+compatible buffers from memory-type-specific `VkDeviceMemory` blocks, keeps
+images isolated for Vulkan granularity safety, honors dedicated-allocation
+metadata, and provides a real device smoke example.
+
+```sh
+v install antono2.vkmemalloc
+```
+
+The Vulkan module owns API-specific handles and policy while this module remains
+dependency-free and useful for host memory, files, parsers, resource tables,
+and other bounded allocation domains.
+
 ## Examples
 
 Runnable actor, retained-buffer, free-range, frame-arena, and streaming-upload
@@ -224,9 +240,9 @@ v test .
 
 ## Roadmap
 
-- optional Vulkan device-memory suballocation examples
 - allocation and fragmentation benchmarks
 - specialized allocation policies driven by benchmark results
+- additional integrations that keep platform APIs outside the core module
 
 ## License
 

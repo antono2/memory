@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Document the production-shaped Vulkan block-suballocation integration in
+  `antono2.vkmemalloc`.
+
 ## 0.2.0 - 2026-09-10
 
 - Convert the actor demonstration into the importable `generic_pool`
