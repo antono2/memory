@@ -1,4 +1,4 @@
-module memory
+module mem
 
 fn test_ring_allocator_aligns_and_accounts_for_padding() {
 	mut allocator := new_ring_allocator(32)

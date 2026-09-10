@@ -1,10 +1,10 @@
 module main
 
-import antono2.memory
+import antono2.mem
 
 fn main() {
 	mut staging_buffer := []u8{len: 64}
-	mut uploads := memory.new_ring_allocator(u64(staging_buffer.len))
+	mut uploads := mem.new_ring_allocator(u64(staging_buffer.len))
 
 	frame_0 := uploads.allocate(24, 16) or { panic(err) }
 	frame_1 := uploads.allocate(24, 16) or { panic(err) }

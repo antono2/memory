@@ -1,6 +1,6 @@
 module main
 
-import antono2.memory
+import antono2.mem
 
 struct MovingActor {
 	name string = 'MovingActor'
@@ -20,7 +20,7 @@ fn reset_moving_actor(actor MovingActor) MovingActor {
 }
 
 fn main() {
-	mut actors := memory.new_object_pool[MovingActor](2, 1, make_moving_actor, reset_moving_actor) or {
+	mut actors := mem.new_object_pool[MovingActor](2, 1, make_moving_actor, reset_moving_actor) or {
 		panic(err)
 	}
 
