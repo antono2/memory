@@ -205,7 +205,9 @@ contiguous region.
 directly usable Vulkan integration built on `RangeAllocator`. It suballocates
 compatible buffers from memory-type-specific `VkDeviceMemory` blocks, keeps
 images isolated for Vulkan granularity safety, honors dedicated-allocation
-metadata, and provides a real device smoke example.
+metadata, and provides a real device smoke example. Its `UploadRing` builds on
+this module's `RingAllocator` to provide persistently mapped staging slices that
+are retired in GPU submission order.
 
 ```sh
 v install antono2.vkmemalloc

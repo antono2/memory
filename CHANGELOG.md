@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
   `antono2/memory` name while retaining the `generic_pool` import name.
 - Document the production-shaped Vulkan block-suballocation integration in
   `antono2.vkmemalloc`.
+- Document the Vulkan persistent upload-ring integration built on
+  `RingAllocator`.
 
 ## 0.2.0 - 2026-09-10
 
