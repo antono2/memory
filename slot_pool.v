@@ -118,17 +118,41 @@ pub fn (mut pool SlotPool[T]) get_mut(handle Handle) ?&T {
 // release returns a slot to the free list. It returns false for a stale,
 // forged, or already released handle and leaves the pool unchanged.
 pub fn (mut pool SlotPool[T]) release(handle Handle) bool {
+	_ := pool.take(handle) or { return false }
+	return true
+}
+
+// take removes and returns the value identified by handle. It returns none for
+// a stale, forged, foreign, or already released handle.
+pub fn (mut pool SlotPool[T]) take(handle Handle) ?T {
 	if !pool.contains(handle) {
-		return false
+		return none
 	}
 	mut slot := &pool.slots[handle.index]
+	value := slot.value
 	slot.value = T{}
 	slot.occupied = false
 	slot.generation = next_generation(slot.generation)
 	slot.next_free = pool.free_head
 	pool.free_head = handle.index
 	pool.used--
-	return true
+	return value
+}
+
+// handles returns a snapshot of every currently valid handle. Its order follows
+// the internal slot order and must not be used as a stable sorting guarantee.
+pub fn (pool &SlotPool[T]) handles() []Handle {
+	mut handles := []Handle{cap: pool.used}
+	for index, slot in pool.slots {
+		if slot.occupied {
+			handles << Handle{
+				index:      index
+				generation: slot.generation
+				owner:      pool
+			}
+		}
+	}
+	return handles
 }
 
 // clear releases every occupied slot and invalidates all of its active handles

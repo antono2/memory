@@ -67,12 +67,56 @@ handle is released or the pool is cleared. Doing so bypasses handle validation.
 The generation counter can eventually wrap after 4,294,967,295 releases of the
 same slot. Generation zero is reserved and skipped.
 
+## Object pool
+
+`ObjectPool[T]` adds lazy creation, prewarming, and reset-on-release behavior on
+top of checked leases. Its factory runs only when no reusable value is available
+and the fixed capacity has not been reached.
+
+```v
+import generic_pool
+
+struct Buffer {
+mut:
+	data []u8
+}
+
+fn make_buffer() Buffer {
+	return Buffer{data: []u8{cap: 4096}}
+}
+
+fn reset_buffer(buffer Buffer) Buffer {
+	mut reset := buffer
+	reset.data.clear()
+	return reset
+}
+
+fn main() {
+	mut buffers := generic_pool.new_object_pool[Buffer](16, 4, make_buffer,
+		reset_buffer) or { panic(err) }
+
+	handle := buffers.acquire() or { panic(err) }
+	mut buffer := buffers.get_mut(handle) or { panic('stale buffer handle') }
+	buffer.data << [u8(1), 2, 3]
+	assert buffers.release(handle)
+
+	// The next acquisition reuses the reset buffer.
+	reused := buffers.acquire() or { panic(err) }
+	assert (buffers.get(reused) or { panic('stale buffer handle') }).data.len == 0
+}
+```
+
+The reset callback receives the released value and returns the value to cache.
+This works uniformly for structs, primitive values, and aliases. The object pool
+also provides `prewarm()`, `release_all()`, counts, and a handle snapshot.
+
 ## Examples
 
-The actor example demonstrates several typed pools and type-specific behavior:
+Runnable actor and temporary-buffer examples are included:
 
 ```sh
 v run examples/object_pool
+v run examples/buffer_pool
 ```
 
 When working from a source checkout rather than an installed V module, run
@@ -90,7 +134,6 @@ v test .
 
 ## Roadmap
 
-- factory/reset-callback object pools
 - aligned linear arenas
 - coalescing free-range allocation
 - transient ring and frame allocation
