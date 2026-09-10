@@ -5,13 +5,10 @@
 `generic_pool` provides small, documented, and tested building blocks
 for reusing objects and managing bounded resources in V.
 
-The first implementation is `SlotPool[T]`: a fixed-capacity pool with constant-
-time insertion and release. It returns generation-checked handles instead of
-pointers that could become stale or move when an array grows.
-
-The project is also a collection of directly runnable examples. Future releases
-will add linear, free-range, and ring allocation, followed by optional Vulkan
-suballocation examples built on the same dependency-free core.
+The library includes checked slot and object pools plus range, linear, and ring
+allocators. Each implementation is dependency-free and accompanied by a
+directly runnable example. Optional Vulkan suballocation examples can build on
+the same core without making the general-purpose module Vulkan-specific.
 
 ## Install
 
@@ -170,16 +167,46 @@ Consumed bytes include alignment gaps; payload and padding are also reported
 separately. Failed allocations never advance the cursor. This makes the type
 useful for frame uploads, parsers, request-scoped storage, and scratch buffers.
 
+## Ring allocator
+
+`RingAllocator` reuses a fixed-size range for contiguous allocations retired in
+the same order they were created. It is designed for staging buffers, streaming
+data, and resources whose lifetime follows a GPU submission or producer queue.
+
+```v
+import generic_pool
+
+fn main() {
+	mut uploads := generic_pool.new_ring_allocator(64 * 1024 * 1024)
+	frame_0 := uploads.allocate(4 * 1024, 256) or { panic(err) }
+	frame_1 := uploads.allocate(8 * 1024, 256) or { panic(err) }
+
+	// Retire allocations when their submissions complete.
+	frame_0_released := uploads.release(frame_0)
+	assert frame_0_released
+	frame_1_released := uploads.release(frame_1)
+	assert frame_1_released
+}
+```
+
+Payloads never cross the end of the managed range. If an allocation wraps, the
+unused suffix is counted as padding and reclaimed with that allocation. Release
+is strictly FIFO: attempting to release a newer live allocation returns
+`false` without changing allocator state. Statistics expose payload, padding,
+free space, peak occupancy, allocation count, and the largest currently usable
+contiguous region.
+
 ## Examples
 
-Runnable actor, retained-buffer, free-range, and frame-arena examples are
-included:
+Runnable actor, retained-buffer, free-range, frame-arena, and streaming-upload
+examples are included:
 
 ```sh
 v run examples/object_pool
 v run examples/buffer_pool
 v run examples/range_allocator
 v run examples/linear_allocator
+v run examples/ring_allocator
 ```
 
 When working from a source checkout rather than an installed V module, run
@@ -197,9 +224,9 @@ v test .
 
 ## Roadmap
 
-- transient ring and frame allocation
 - optional Vulkan device-memory suballocation examples
-- deterministic stress tests and allocation/fragmentation benchmarks
+- allocation and fragmentation benchmarks
+- specialized allocation policies driven by benchmark results
 
 ## License
 
