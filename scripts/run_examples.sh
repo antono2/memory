@@ -7,6 +7,6 @@ trap 'rm -rf "$modules_dir"' EXIT HUP INT TERM
 
 ln -s "$repo_dir" "$modules_dir/generic_pool"
 
-for example in object_pool buffer_pool range_allocator linear_allocator; do
+for example in object_pool buffer_pool range_allocator linear_allocator ring_allocator; do
 	VMODULES="$modules_dir" v run "$repo_dir/examples/$example"
 done

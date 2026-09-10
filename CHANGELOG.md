@@ -13,5 +13,7 @@ All notable changes to this project will be documented in this file.
   buffers, mapped files, shared memory, and GPU memory blocks.
 - Add an O(1) aligned `LinearAllocator` for frame- and phase-scoped temporary
   ranges, including payload, padding, remaining, and peak-use statistics.
+- Add a FIFO `RingAllocator` for staging buffers and streaming allocations,
+  including aligned wraparound, checked releases, and occupancy statistics.
 - Move the actor demonstration to `examples/object_pool`.
 - Add automated formatting, vetting, tests, and example execution.
