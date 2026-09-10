@@ -5,6 +5,7 @@ import os
 import time
 
 const default_operations = 1_000_000
+const allocator_trace_max_live = 512
 
 struct BenchmarkResult {
 	name       string
@@ -12,6 +13,7 @@ struct BenchmarkResult {
 	elapsed_ns u64
 	checksum   u64
 	detail     string
+	trace_hash u64
 }
 
 struct BenchmarkRandom {
@@ -22,6 +24,68 @@ mut:
 fn (mut random BenchmarkRandom) next() u32 {
 	random.state = random.state * 1_664_525 + 1_013_904_223
 	return random.state
+}
+
+struct AllocationTraceOperation {
+	is_allocate bool
+	token       int
+	size        u64
+	alignment   u64
+}
+
+struct AllocationTrace {
+mut:
+	random_source BenchmarkRandom
+	active_tokens []int
+	free_tokens   []int
+	hash          u64
+}
+
+fn new_allocation_trace() AllocationTrace {
+	mut free_tokens := []int{cap: allocator_trace_max_live}
+	for token in 0 .. allocator_trace_max_live {
+		free_tokens << allocator_trace_max_live - token - 1
+	}
+	return AllocationTrace{
+		random_source: BenchmarkRandom{
+			state: 0xa110ca7e
+		}
+		active_tokens: []int{cap: allocator_trace_max_live}
+		free_tokens:   free_tokens
+		hash:          0xcbf29ce484222325
+	}
+}
+
+fn (mut trace AllocationTrace) next() AllocationTraceOperation {
+	random := trace.random_source.next()
+	if trace.active_tokens.len == allocator_trace_max_live
+		|| (trace.active_tokens.len > 0 && random % 3 == 0) {
+		index := int((random >> 8) % u32(trace.active_tokens.len))
+		token := trace.active_tokens[index]
+		trace.active_tokens[index] = trace.active_tokens[trace.active_tokens.len - 1]
+		trace.active_tokens.trim(trace.active_tokens.len - 1)
+		trace.free_tokens << token
+		trace.mix_hash(u64(token) << 1)
+		return AllocationTraceOperation{
+			token: token
+		}
+	}
+	token := trace.free_tokens[trace.free_tokens.len - 1]
+	trace.free_tokens.trim(trace.free_tokens.len - 1)
+	trace.active_tokens << token
+	size := u64(16 + (random >> 12) % 2033)
+	alignment := u64(1) << u32((random >> 28) % 9)
+	trace.mix_hash((u64(token) << 33) ^ (size << 9) ^ alignment ^ 1)
+	return AllocationTraceOperation{
+		is_allocate: true
+		token:       token
+		size:        size
+		alignment:   alignment
+	}
+}
+
+fn (mut trace AllocationTrace) mix_hash(value u64) {
+	trace.hash = (trace.hash ^ value) * 0x100000001b3
 }
 
 fn benchmark_slot_pool(operations int) BenchmarkResult {
@@ -96,35 +160,37 @@ fn benchmark_object_pool(operations int) BenchmarkResult {
 
 fn benchmark_range_allocator(operations int) BenchmarkResult {
 	mut allocator := mem.new_range_allocator(1024 * 1024)
-	mut active := []mem.RangeAllocation{cap: 1024}
-	mut random_source := BenchmarkRandom{
-		state: 0xa110ca7e
-	}
+	mut trace := new_allocation_trace()
+	mut allocations := []mem.RangeAllocation{len: allocator_trace_max_live}
+	mut allocated := []bool{len: allocator_trace_max_live}
 	mut checksum := u64(0)
+	mut allocation_attempts := 0
+	mut allocation_failures := 0
+	mut releases := 0
+	mut peak_used := u64(0)
 	start := time.sys_mono_now()
 	for _ in 0 .. operations {
-		random := random_source.next()
-		if active.len > 0 && random % 3 == 0 {
-			index := int((random >> 8) % u32(active.len))
-			allocation := active[index]
-			checksum += allocation.offset
-			if !allocator.release(allocation) {
-				panic('live range allocation was rejected')
-			}
-			active[index] = active[active.len - 1]
-			active.trim(active.len - 1)
-		} else {
-			size := u64(16 + (random >> 12) % 2033)
-			alignment := u64(1) << u32((random >> 28) % 9)
-			if allocation := allocator.allocate(size, alignment) {
-				active << allocation
-			} else if active.len > 0 {
-				index := int((random >> 8) % u32(active.len))
-				if !allocator.release(active[index]) {
-					panic('live range allocation was rejected after exhaustion')
+		operation := trace.next()
+		if operation.is_allocate {
+			allocation_attempts++
+			if allocation := allocator.allocate(operation.size, operation.alignment) {
+				allocations[operation.token] = allocation
+				allocated[operation.token] = true
+				if allocator.used_bytes() > peak_used {
+					peak_used = allocator.used_bytes()
 				}
-				active[index] = active[active.len - 1]
-				active.trim(active.len - 1)
+			} else {
+				allocation_failures++
+			}
+		} else {
+			if allocated[operation.token] {
+				allocation := allocations[operation.token]
+				checksum += allocation.offset
+				if !allocator.release(allocation) {
+					panic('live range allocation was rejected')
+				}
+				allocated[operation.token] = false
+				releases++
 			}
 		}
 	}
@@ -134,41 +200,40 @@ fn benchmark_range_allocator(operations int) BenchmarkResult {
 		operations: operations
 		elapsed_ns: time.sys_mono_now() - start
 		checksum:   checksum + stats.used
-		detail:     'capacity=1MiB live=${stats.allocation_count} free_ranges=${stats.free_range_count} largest_free=${stats.largest_free_range}'
+		detail:     'trace=v2 allocations=${allocation_attempts - allocation_failures}/${allocation_attempts} failed=${allocation_failures} releases=${releases} live=${stats.allocation_count} used=${stats.used} peak=${peak_used} free_ranges=${stats.free_range_count} largest_free=${stats.largest_free_range}'
+		trace_hash: trace.hash
 	}
 }
 
 fn benchmark_buddy_allocator(operations int) BenchmarkResult {
 	mut allocator := mem.new_buddy_allocator(1024 * 1024, 16) or { panic(err) }
-	mut active := []mem.BuddyAllocation{cap: 1024}
-	mut random_source := BenchmarkRandom{
-		state: 0xa110ca7e
-	}
+	mut trace := new_allocation_trace()
+	mut allocations := []mem.BuddyAllocation{len: allocator_trace_max_live}
+	mut allocated := []bool{len: allocator_trace_max_live}
 	mut checksum := u64(0)
+	mut allocation_attempts := 0
+	mut allocation_failures := 0
+	mut releases := 0
 	start := time.sys_mono_now()
 	for _ in 0 .. operations {
-		random := random_source.next()
-		if active.len > 0 && random % 3 == 0 {
-			index := int((random >> 8) % u32(active.len))
-			allocation := active[index]
-			checksum += allocation.offset
-			if !allocator.release(allocation) {
-				panic('live buddy allocation was rejected')
+		operation := trace.next()
+		if operation.is_allocate {
+			allocation_attempts++
+			if allocation := allocator.allocate(operation.size, operation.alignment) {
+				allocations[operation.token] = allocation
+				allocated[operation.token] = true
+			} else {
+				allocation_failures++
 			}
-			active[index] = active[active.len - 1]
-			active.trim(active.len - 1)
 		} else {
-			size := u64(16 + (random >> 12) % 2033)
-			alignment := u64(1) << u32((random >> 28) % 9)
-			if allocation := allocator.allocate(size, alignment) {
-				active << allocation
-			} else if active.len > 0 {
-				index := int((random >> 8) % u32(active.len))
-				if !allocator.release(active[index]) {
-					panic('live buddy allocation was rejected after exhaustion')
+			if allocated[operation.token] {
+				allocation := allocations[operation.token]
+				checksum += allocation.offset
+				if !allocator.release(allocation) {
+					panic('live buddy allocation was rejected')
 				}
-				active[index] = active[active.len - 1]
-				active.trim(active.len - 1)
+				allocated[operation.token] = false
+				releases++
 			}
 		}
 	}
@@ -178,7 +243,8 @@ fn benchmark_buddy_allocator(operations int) BenchmarkResult {
 		operations: operations
 		elapsed_ns: time.sys_mono_now() - start
 		checksum:   checksum + stats.reserved
-		detail:     'capacity=1MiB live=${stats.allocation_count} internal=${stats.internal_fragmentation} largest_free=${stats.largest_free_block}'
+		detail:     'trace=v2 allocations=${allocation_attempts - allocation_failures}/${allocation_attempts} failed=${allocation_failures} releases=${releases} live=${stats.allocation_count} payload=${stats.payload} reserved=${stats.reserved} internal=${stats.internal_fragmentation} peak=${stats.peak_reserved} largest_free=${stats.largest_free_block}'
+		trace_hash: trace.hash
 	}
 }
 
@@ -260,7 +326,8 @@ fn print_result(result BenchmarkResult) {
 	ns_per_operation := f64(result.elapsed_ns) / f64(result.operations)
 	operations_per_second := 1_000_000_000.0 / ns_per_operation
 	println('${result.name}: ${ns_per_operation:.1f} ns/op, ${operations_per_second:.0f} ops/s')
-	println('  ${result.detail} checksum=${result.checksum}')
+	trace_detail := if result.trace_hash == 0 { '' } else { ' trace_hash=${result.trace_hash:x}' }
+	println('  ${result.detail} checksum=${result.checksum}${trace_detail}')
 }
 
 fn main() {
@@ -272,11 +339,16 @@ fn main() {
 		eprintln('operation count must be greater than zero')
 		exit(2)
 	}
-	println('deterministic allocator benchmark: operations=${operations}, seed set=v1')
+	println('deterministic allocator benchmark: operations=${operations}, seed set=v2')
 	print_result(benchmark_slot_pool(operations))
 	print_result(benchmark_object_pool(operations))
-	print_result(benchmark_range_allocator(operations))
-	print_result(benchmark_buddy_allocator(operations))
+	range_result := benchmark_range_allocator(operations)
+	buddy_result := benchmark_buddy_allocator(operations)
+	if range_result.trace_hash != buddy_result.trace_hash {
+		panic('range and buddy benchmarks did not replay the same allocation trace')
+	}
+	print_result(range_result)
+	print_result(buddy_result)
 	print_result(benchmark_linear_allocator(operations))
 	print_result(benchmark_ring_allocator(operations))
 }

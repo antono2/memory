@@ -269,6 +269,7 @@ v run examples/buffer_pool
 v run examples/range_allocator
 v run examples/linear_allocator
 v run examples/ring_allocator
+v run examples/buddy_allocator
 ```
 
 When working from a source checkout rather than an installed V module, run
@@ -286,9 +287,11 @@ Run the deterministic churn workloads with production compiler optimizations:
 Pass an operation count to shorten or extend a run, or use `--quick` for the CI
 smoke workload. The harness covers slot and object reuse, fragmented first-fit
 ranges, power-of-two buddy allocation, linear allocate/reset cycles, and FIFO
-ring streaming. It prints timing and fragmentation statistics but deliberately
-enforces no universal performance threshold; compare results only on the same
-machine and toolchain.
+ring streaming. Range and buddy allocation replay the same bounded request and
+release trace, verified by a trace hash, and report successful allocations,
+failures, peak occupancy, and fragmentation alongside timing. The harness
+deliberately enforces no universal performance threshold; compare results only
+on the same machine, toolchain, and trace version.
 
 ## Verify
 
