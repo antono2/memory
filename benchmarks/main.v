@@ -138,6 +138,50 @@ fn benchmark_range_allocator(operations int) BenchmarkResult {
 	}
 }
 
+fn benchmark_buddy_allocator(operations int) BenchmarkResult {
+	mut allocator := mem.new_buddy_allocator(1024 * 1024, 16) or { panic(err) }
+	mut active := []mem.BuddyAllocation{cap: 1024}
+	mut random_source := BenchmarkRandom{
+		state: 0xa110ca7e
+	}
+	mut checksum := u64(0)
+	start := time.sys_mono_now()
+	for _ in 0 .. operations {
+		random := random_source.next()
+		if active.len > 0 && random % 3 == 0 {
+			index := int((random >> 8) % u32(active.len))
+			allocation := active[index]
+			checksum += allocation.offset
+			if !allocator.release(allocation) {
+				panic('live buddy allocation was rejected')
+			}
+			active[index] = active[active.len - 1]
+			active.trim(active.len - 1)
+		} else {
+			size := u64(16 + (random >> 12) % 2033)
+			alignment := u64(1) << u32((random >> 28) % 9)
+			if allocation := allocator.allocate(size, alignment) {
+				active << allocation
+			} else if active.len > 0 {
+				index := int((random >> 8) % u32(active.len))
+				if !allocator.release(active[index]) {
+					panic('live buddy allocation was rejected after exhaustion')
+				}
+				active[index] = active[active.len - 1]
+				active.trim(active.len - 1)
+			}
+		}
+	}
+	stats := allocator.stats()
+	return BenchmarkResult{
+		name:       'buddy power-of-two'
+		operations: operations
+		elapsed_ns: time.sys_mono_now() - start
+		checksum:   checksum + stats.reserved
+		detail:     'capacity=1MiB live=${stats.allocation_count} internal=${stats.internal_fragmentation} largest_free=${stats.largest_free_block}'
+	}
+}
+
 fn benchmark_linear_allocator(operations int) BenchmarkResult {
 	mut allocator := mem.new_linear_allocator(1024 * 1024)
 	mut random_source := BenchmarkRandom{
@@ -232,6 +276,7 @@ fn main() {
 	print_result(benchmark_slot_pool(operations))
 	print_result(benchmark_object_pool(operations))
 	print_result(benchmark_range_allocator(operations))
+	print_result(benchmark_buddy_allocator(operations))
 	print_result(benchmark_linear_allocator(operations))
 	print_result(benchmark_ring_allocator(operations))
 }
