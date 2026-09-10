@@ -1,6 +1,6 @@
 module main
 
-import antono2.generic_pool
+import generic_pool
 
 struct MovingActor {
 	name string = 'MovingActor'

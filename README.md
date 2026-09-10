@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/antono2/v_generic_pool/actions/workflows/ci.yml/badge.svg)](https://github.com/antono2/v_generic_pool/actions/workflows/ci.yml)
 
-`antono2.generic_pool` provides small, documented, and tested building blocks
+`generic_pool` provides small, documented, and tested building blocks
 for reusing objects and managing bounded resources in V.
 
 The first implementation is `SlotPool[T]`: a fixed-capacity pool with constant-
@@ -22,7 +22,7 @@ v install https://github.com/antono2/v_generic_pool
 Then import it using its VPM name:
 
 ```v
-import antono2.generic_pool
+import generic_pool
 ```
 
 ## Slot pool
@@ -31,7 +31,7 @@ Create a pool once, insert values until it reaches its fixed capacity, and use
 the returned handle for later access or release:
 
 ```v
-import antono2.generic_pool
+import generic_pool
 
 struct Particle {
 mut:
