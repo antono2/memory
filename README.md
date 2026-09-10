@@ -6,7 +6,8 @@
 objects and managing bounded memory and resource ranges in V.
 
 The library includes checked slot and object pools plus range, linear, and ring
-allocators. Each implementation is dependency-free and accompanied by a
+allocators, along with a power-of-two buddy allocator for specialized arenas.
+Each implementation is dependency-free and accompanied by a
 directly runnable example. Optional Vulkan suballocation examples can build on
 the same core without making the general-purpose module Vulkan-specific.
 
@@ -212,6 +213,32 @@ is strictly FIFO: attempting to release a newer live allocation returns
 free space, peak occupancy, allocation count, and the largest currently usable
 contiguous region.
 
+## Buddy allocator
+
+`BuddyAllocator` specializes in power-of-two arenas such as GPU memory blocks,
+page groups, and fixed scratch heaps. Requests are rounded up to the smallest
+block satisfying the requested size, alignment, and configured minimum block
+size. Allocation splits larger blocks; release recursively coalesces free
+buddies.
+
+```v
+import antono2.mem
+
+fn main() {
+	mut pages := mem.new_buddy_allocator(64 * 1024 * 1024, 256) or { panic(err) }
+	allocation := pages.allocate(6000, 4096) or { panic(err) }
+
+	assert allocation.offset % 4096 == 0
+	println('payload=${allocation.size}, reserved=${allocation.block_size}')
+	assert pages.release(allocation)
+}
+```
+
+Capacity, minimum block size, and requested alignments must be powers of two.
+Unlike `RangeAllocator`, the buddy allocator trades internal fragmentation for
+bounded tree depth and automatic recursive coalescing. Statistics report both
+payload and reserved bytes so that tradeoff remains visible.
+
 ## Vulkan integration
 
 [`antono2.vkmemalloc`](https://github.com/antono2/vulkan_memory_allocator) is a
@@ -257,9 +284,10 @@ Run the deterministic churn workloads with production compiler optimizations:
 
 Pass an operation count to shorten or extend a run, or use `--quick` for the CI
 smoke workload. The harness covers slot and object reuse, fragmented first-fit
-ranges, linear allocate/reset cycles, and FIFO ring streaming. It prints timing
-and fragmentation statistics but deliberately enforces no universal performance
-threshold; compare results only on the same machine and toolchain.
+ranges, power-of-two buddy allocation, linear allocate/reset cycles, and FIFO
+ring streaming. It prints timing and fragmentation statistics but deliberately
+enforces no universal performance threshold; compare results only on the same
+machine and toolchain.
 
 ## Verify
 

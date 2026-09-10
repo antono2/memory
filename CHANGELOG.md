@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Add a deterministic power-of-two `BuddyAllocator` with checked allocation
+  records, recursive coalescing, occupancy statistics, tests, and an example.
 - Add an independent bitmap-model stress test for deterministic first-fit range
   allocation under fragmentation.
 - Add deterministic object-pool lifecycle stress coverage.
