@@ -83,24 +83,24 @@ fn test_forged_handles_are_rejected() {
 	valid := pool.insert(TestItem{ value: 1 }) or { panic(err) }
 
 	assert !pool.contains(Handle{
-		index: -1
+		index:      -1
 		generation: valid.generation
-		owner: valid.owner
+		owner:      valid.owner
 	})
 	assert !pool.contains(Handle{
-		index: 4
+		index:      4
 		generation: valid.generation
-		owner: valid.owner
+		owner:      valid.owner
 	})
 	assert !pool.contains(Handle{
-		index: valid.index
+		index:      valid.index
 		generation: valid.generation + 1
-		owner: valid.owner
+		owner:      valid.owner
 	})
 	assert !pool.release(Handle{
-		index: valid.index
+		index:      valid.index
 		generation: valid.generation + 1
-		owner: valid.owner
+		owner:      valid.owner
 	})
 	assert pool.contains(valid)
 }

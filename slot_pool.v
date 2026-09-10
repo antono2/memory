@@ -41,7 +41,7 @@ pub fn new_slot_pool[T](capacity int) !&SlotPool[T] {
 		slots[i].next_free = if i + 1 < capacity { i + 1 } else { -1 }
 	}
 	return &SlotPool[T]{
-		slots: slots
+		slots:     slots
 		free_head: if capacity > 0 { 0 } else { -1 }
 	}
 }
@@ -80,9 +80,9 @@ pub fn (mut pool SlotPool[T]) insert(value T) !Handle {
 	slot.occupied = true
 	pool.used++
 	return Handle{
-		index: index
+		index:      index
 		generation: slot.generation
-		owner: pool
+		owner:      pool
 	}
 }
 
