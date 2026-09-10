@@ -247,6 +247,20 @@ When working from a source checkout rather than an installed V module, run
 `./scripts/run_examples.sh`; the script creates an isolated module path and does
 not modify the user's installed modules.
 
+## Benchmarks
+
+Run the deterministic churn workloads with production compiler optimizations:
+
+```sh
+./scripts/run_benchmarks.sh
+```
+
+Pass an operation count to shorten or extend a run, or use `--quick` for the CI
+smoke workload. The harness covers slot and object reuse, fragmented first-fit
+ranges, linear allocate/reset cycles, and FIFO ring streaming. It prints timing
+and fragmentation statistics but deliberately enforces no universal performance
+threshold; compare results only on the same machine and toolchain.
+
 ## Verify
 
 ```sh
@@ -254,11 +268,12 @@ v fmt -verify .
 v vet .
 v test .
 ./scripts/run_examples.sh
+./scripts/run_benchmarks.sh --quick
 ```
 
 ## Roadmap
 
-- allocation and fragmentation benchmarks
+- benchmark baselines across representative machines and V compiler versions
 - specialized allocation policies driven by benchmark results
 - additional integrations that keep platform APIs outside the core module
 
