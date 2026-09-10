@@ -28,11 +28,13 @@ fn main() {
 	actor.x += actor.velocity
 	println('${actor.name}: x=${actor.x}, velocity=${actor.velocity}')
 
-	assert actors.release(actor_handle)
+	released := actors.release(actor_handle)
+	assert released
 	reused_handle := actors.acquire() or { panic(err) }
 	reused := actors.get(reused_handle) or { panic('reused actor handle became stale') }
 	println('${reused.name}: x=${reused.x}, reused=${actors.created_count() == 1}')
 
-	assert actors.release_all() == 1
+	released_count := actors.release_all()
+	assert released_count == 1
 	println('active actors after release: ${actors.len()}')
 }

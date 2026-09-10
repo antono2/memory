@@ -62,8 +62,10 @@ fn test_object_pool_prewarms_lazily_creates_resets_and_reuses() {
 	mut value := pool.get_mut(second) or { panic('missing mutable value') }
 	value.value = 99
 	value.label = 'used'
-	assert pool.release(second)
-	assert !pool.release(second)
+	second_release := pool.release(second)
+	assert second_release
+	double_release := pool.release(second)
+	assert !double_release
 	assert pool.available_count() == 1
 
 	reused := pool.acquire() or { panic(err) }
@@ -95,12 +97,14 @@ fn test_object_pool_prewarm_and_release_all() {
 
 	first := pool.acquire() or { panic(err) }
 	second := pool.acquire() or { panic(err) }
-	assert pool.release_all() == 2
+	released := pool.release_all()
+	assert released == 2
 	assert pool.is_empty()
 	assert pool.available_count() == 3
 	assert !pool.contains(first)
 	assert !pool.contains(second)
-	assert pool.release_all() == 0
+	released_again := pool.release_all()
+	assert released_again == 0
 }
 
 fn test_object_pool_rejects_foreign_handles() {
@@ -117,8 +121,10 @@ fn test_object_pool_rejects_foreign_handles() {
 	first := first_pool.acquire() or { panic(err) }
 	second := second_pool.acquire() or { panic(err) }
 
-	assert !first_pool.release(second)
-	assert !second_pool.release(first)
+	foreign_first := first_pool.release(second)
+	assert !foreign_first
+	foreign_second := second_pool.release(first)
+	assert !foreign_second
 	assert first_pool.contains(first)
 	assert second_pool.contains(second)
 }

@@ -45,8 +45,10 @@ fn test_insert_get_mut_release_and_reuse() {
 		assert err.msg().contains('full')
 	}
 
-	assert pool.release(first)
-	assert !pool.release(first)
+	first_release := pool.release(first)
+	assert first_release
+	double_release := pool.release(first)
+	assert !double_release
 	assert !pool.contains(first)
 	assert pool.get(first) == none
 	assert pool.len() == 1
@@ -91,7 +93,8 @@ fn test_take_returns_value_and_handles_snapshot_tracks_occupancy() {
 	value := pool.take(first) or { panic('expected first value') }
 	assert value.value == 11
 	assert value.name == 'first'
-	assert pool.take(first) == none
+	double_take := pool.take(first)
+	assert double_take == none
 	assert pool.handles() == [second]
 }
 
@@ -114,11 +117,12 @@ fn test_forged_handles_are_rejected() {
 		generation: valid.generation + 1
 		owner:      valid.owner
 	})
-	assert !pool.release(Handle{
+	forged_release := pool.release(Handle{
 		index:      valid.index
 		generation: valid.generation + 1
 		owner:      valid.owner
 	})
+	assert !forged_release
 	assert pool.contains(valid)
 }
 
@@ -130,8 +134,10 @@ fn test_handles_are_rejected_by_other_pools() {
 
 	assert !first_pool.contains(second)
 	assert !second_pool.contains(first)
-	assert !first_pool.release(second)
-	assert first_pool.release(first)
+	foreign_release := first_pool.release(second)
+	assert !foreign_release
+	first_release := first_pool.release(first)
+	assert first_release
 }
 
 fn test_generation_skips_reserved_zero_after_wrap() {
@@ -152,7 +158,8 @@ fn test_deterministic_insert_release_stress() {
 		} else {
 			index := int(state % u32(active.len))
 			handle := active[index]
-			assert pool.release(handle)
+			released := pool.release(handle)
+			assert released
 			active.delete(index)
 			assert !pool.contains(handle)
 		}

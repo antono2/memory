@@ -46,7 +46,8 @@ fn main() {
 	mut particle := particles.get_mut(handle) or { panic('stale particle handle') }
 	particle.x += 1
 
-	assert particles.release(handle)
+	released := particles.release(handle)
+	assert released
 	assert particles.get(handle) == none
 }
 ```
@@ -98,7 +99,8 @@ fn main() {
 	handle := buffers.acquire() or { panic(err) }
 	mut buffer := buffers.get_mut(handle) or { panic('stale buffer handle') }
 	buffer.data << [u8(1), 2, 3]
-	assert buffers.release(handle)
+	released := buffers.release(handle)
+	assert released
 
 	// The next acquisition reuses the reset buffer.
 	reused := buffers.acquire() or { panic(err) }
@@ -110,13 +112,45 @@ The reset callback receives the released value and returns the value to cache.
 This works uniformly for structs, primitive values, and aliases. The object pool
 also provides `prewarm()`, `release_all()`, counts, and a handle snapshot.
 
+## Range allocator
+
+`RangeAllocator` manages aligned offsets inside a fixed-size resource without
+owning the resource itself. It uses deterministic first fit, returns checked
+allocation records, and coalesces adjacent ranges when they are released.
+
+```v
+import generic_pool
+
+fn main() {
+	mut block := generic_pool.new_range_allocator(256 * 1024 * 1024)
+	vertex_memory := block.allocate(48 * 1024, 256) or { panic(err) }
+
+	println('bind at offset ${vertex_memory.offset}')
+	println('exclusive end ${vertex_memory.end()}')
+
+	released := block.release(vertex_memory)
+	assert released
+	assert block.free_bytes() == block.capacity()
+}
+```
+
+The returned `offset` and `size` can index a byte buffer directly or be passed
+to APIs such as `vkBindBufferMemory`. The allocator accepts any positive
+alignment, detects alignment overflow, rejects stale/foreign/double releases,
+and reports allocation count, free-range count, and largest free range.
+
+Allocation and release are O(number of free ranges). This intentionally favors
+a compact, inspectable implementation; specialized strategies can be added
+behind separate types when benchmarks justify them.
+
 ## Examples
 
-Runnable actor and temporary-buffer examples are included:
+Runnable actor, retained-buffer, and aligned-range examples are included:
 
 ```sh
 v run examples/object_pool
 v run examples/buffer_pool
+v run examples/range_allocator
 ```
 
 When working from a source checkout rather than an installed V module, run
@@ -135,7 +169,6 @@ v test .
 ## Roadmap
 
 - aligned linear arenas
-- coalescing free-range allocation
 - transient ring and frame allocation
 - optional Vulkan device-memory suballocation examples
 - deterministic stress tests and allocation/fragmentation benchmarks
