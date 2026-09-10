@@ -41,6 +41,23 @@ the distribution repository and installed directory.
 Projects that still import `generic_pool` should pin the 0.2.0 release until
 they are ready to update their imports.
 
+## Choosing an allocator
+
+| Type | Use it when | Release order | Main tradeoff |
+| --- | --- | --- | --- |
+| `SlotPool[T]` | You need a fixed number of typed values with stable, checked handles | Any order | Capacity is fixed at construction |
+| `ObjectPool[T]` | Creating a typed resource is expensive and released values can be reset and reused | Any order | A reset callback must restore reusable state |
+| `RangeAllocator` | Requests have arbitrary sizes or non-power-of-two alignments | Any order | First-fit allocation and release scan free ranges |
+| `LinearAllocator` | A whole batch shares one lifetime, such as frame or request scratch data | All at once with `reset()` | Individual ranges cannot be released |
+| `RingAllocator` | Allocations are retired in the same order they are created | FIFO | Out-of-order release is rejected |
+| `BuddyAllocator` | Power-of-two splitting and recursive coalescing suit the arena | Any order | Requests consume rounded-up blocks and tree metadata |
+
+The allocators manage values or numeric ranges; they do not allocate, map, or
+free an operating-system or GPU resource. Create the backing resource once,
+use returned offsets or handles to address it, and destroy the backing resource
+only after its allocations are no longer live. None of the types is internally
+synchronized.
+
 ## Slot pool
 
 Create a pool once, insert values until it reaches its fixed capacity, and use

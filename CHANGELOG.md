@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
   comparisons, with success, failure, peak-use, and trace-integrity diagnostics.
 - Run the allocator test suite and canonical `antono2.mem` public-import
   examples on Linux, macOS, and Windows in CI.
+- Add a task-oriented allocator selection guide covering lifetime, release
+  order, and fragmentation tradeoffs.
 
 ## 1.0.3 - 2026-09-10
 
