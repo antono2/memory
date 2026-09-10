@@ -27,7 +27,8 @@ fn main() {
 	handle := buffers.acquire() or { panic(err) }
 	mut buffer := buffers.get_mut(handle) or { panic('stale buffer handle') }
 	buffer.data << [u8(1), 2, 3]
-	assert buffers.release(handle)
+	released := buffers.release(handle)
+	assert released
 
 	reused := buffers.acquire() or { panic(err) }
 	reused_buffer := buffers.get(reused) or { panic('stale buffer handle') }
