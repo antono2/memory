@@ -78,6 +78,23 @@ fn test_clear_invalidates_active_handles_without_changing_capacity() {
 	assert pool.is_full()
 }
 
+fn test_take_returns_value_and_handles_snapshot_tracks_occupancy() {
+	mut pool := new_slot_pool[TestItem](3) or { panic(err) }
+	first := pool.insert(TestItem{ value: 11, name: 'first' }) or { panic(err) }
+	second := pool.insert(TestItem{ value: 22, name: 'second' }) or { panic(err) }
+
+	handles := pool.handles()
+	assert handles.len == 2
+	assert handles.contains(first)
+	assert handles.contains(second)
+
+	value := pool.take(first) or { panic('expected first value') }
+	assert value.value == 11
+	assert value.name == 'first'
+	assert pool.take(first) == none
+	assert pool.handles() == [second]
+}
+
 fn test_forged_handles_are_rejected() {
 	mut pool := new_slot_pool[TestItem](1) or { panic(err) }
 	valid := pool.insert(TestItem{ value: 1 }) or { panic(err) }
