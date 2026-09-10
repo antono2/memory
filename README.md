@@ -143,14 +143,43 @@ Allocation and release are O(number of free ranges). This intentionally favors
 a compact, inspectable implementation; specialized strategies can be added
 behind separate types when benchmarks justify them.
 
+## Linear allocator
+
+`LinearAllocator` provides O(1) aligned bump allocation for data that shares a
+lifetime. Individual ranges are not released; `reset()` invalidates all of them
+at once while preserving the peak-use statistic.
+
+```v
+import generic_pool
+
+fn main() {
+	mut frame_arena := generic_pool.new_linear_allocator(4 * 1024 * 1024)
+	vertices := frame_arena.allocate(96 * 1024, 16) or { panic(err) }
+	uniforms := frame_arena.allocate(256, 256) or { panic(err) }
+
+	println('vertex offset ${vertices.offset}')
+	println('uniform offset ${uniforms.offset}')
+	println('alignment padding ${frame_arena.stats().padding}')
+
+	frame_arena.reset()
+	assert !frame_arena.contains(vertices)
+}
+```
+
+Consumed bytes include alignment gaps; payload and padding are also reported
+separately. Failed allocations never advance the cursor. This makes the type
+useful for frame uploads, parsers, request-scoped storage, and scratch buffers.
+
 ## Examples
 
-Runnable actor, retained-buffer, and aligned-range examples are included:
+Runnable actor, retained-buffer, free-range, and frame-arena examples are
+included:
 
 ```sh
 v run examples/object_pool
 v run examples/buffer_pool
 v run examples/range_allocator
+v run examples/linear_allocator
 ```
 
 When working from a source checkout rather than an installed V module, run
@@ -168,7 +197,6 @@ v test .
 
 ## Roadmap
 
-- aligned linear arenas
 - transient ring and frame allocation
 - optional Vulkan device-memory suballocation examples
 - deterministic stress tests and allocation/fragmentation benchmarks

@@ -245,15 +245,3 @@ fn (mut allocator RangeAllocator) next_allocation_id() u64 {
 	}
 	return 0
 }
-
-fn align_forward(value u64, alignment u64) ?u64 {
-	remainder := value % alignment
-	if remainder == 0 {
-		return value
-	}
-	padding := alignment - remainder
-	if value > max_u64 - padding {
-		return none
-	}
-	return value + padding
-}
