@@ -2,10 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.1 - 2026-09-10
+
+- Use the canonical `antono2.memory` VPM name and import path so V installs the
+  module under `~/.vmodules/antono2/memory`.
+- Document both VPM and version-pinned direct installation.
+
 ## 1.0.0 - 2026-09-10
 
-- Rename the V module and public import from `generic_pool` to `memory`, matching
-  the repository name. Projects retaining the old import can pin v0.2.0.
+- Rename the V module from `generic_pool`; this release used the short `memory`
+  import and was superseded by v1.0.1 before VPM publication. Projects retaining
+  the old import can pin v0.2.0.
 - Update repository metadata and installation instructions for the
   `antono2/memory` name.
 - Document the production-shaped Vulkan block-suballocation integration in

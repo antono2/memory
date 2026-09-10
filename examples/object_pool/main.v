@@ -1,6 +1,6 @@
 module main
 
-import memory
+import antono2.memory
 
 struct MovingActor {
 	name string = 'MovingActor'
