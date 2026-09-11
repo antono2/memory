@@ -1,4 +1,4 @@
-module mem
+module memory
 
 fn test_linear_allocator_aligns_and_accounts_for_padding() {
 	mut allocator := new_linear_allocator(64)

@@ -1,4 +1,4 @@
-module mem
+module memory
 
 fn test_buddy_allocator_validates_configuration() {
 	if _ := new_buddy_allocator(0, 1) {

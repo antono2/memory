@@ -1,6 +1,6 @@
 # Memory management building blocks for V
 
-[![CI](https://github.com/antono2/mem/actions/workflows/ci.yml/badge.svg)](https://github.com/antono2/mem/actions/workflows/ci.yml)
+[![CI](https://github.com/antono2/memory/actions/workflows/ci.yml/badge.svg)](https://github.com/antono2/memory/actions/workflows/ci.yml)
 
 `memory` provides small, documented, and tested building blocks for reusing
 objects and managing bounded memory and resource ranges in V.
@@ -16,16 +16,16 @@ Windows.
 ## Install
 
 ```sh
-v install antono2.mem
+v install antono2.memory
 ```
 
-Before the VPM entry is published, clone the release into V's canonical nested
-module path:
+Before the VPM entry is published, clone the repository into V's canonical
+nested module path:
 
 ```sh
 mkdir -p ~/.vmodules/antono2
-git clone --branch v1.0.3 https://github.com/antono2/mem \
-	~/.vmodules/antono2/mem
+git clone https://github.com/antono2/memory \
+	~/.vmodules/antono2/memory
 ```
 
 V 0.5.2 cannot infer that nested path from an unregistered Git URL alone.
@@ -33,11 +33,11 @@ V 0.5.2 cannot infer that nested path from an unregistered Git URL alone.
 Then import it using its canonical VPM name:
 
 ```v
-import antono2.mem
+import antono2.memory
 ```
 
-The current 1.x release uses `antono2.mem` as its VPM and import name, matching
-the distribution repository and installed directory.
+The canonical VPM and import name is `antono2.memory`, matching the repository
+and installed directory.
 Projects that still import `generic_pool` should pin the 0.2.0 release until
 they are ready to update their imports.
 
@@ -64,7 +64,7 @@ Create a pool once, insert values until it reaches its fixed capacity, and use
 the returned handle for later access or release:
 
 ```v
-import antono2.mem
+import antono2.memory
 
 struct Particle {
 mut:
@@ -73,7 +73,7 @@ mut:
 }
 
 fn main() {
-	mut particles := mem.new_slot_pool[Particle](128) or { panic(err) }
+	mut particles := memory.new_slot_pool[Particle](128) or { panic(err) }
 	handle := particles.insert(Particle{x: 10, y: 20}) or { panic(err) }
 
 	mut particle := particles.get_mut(handle) or { panic('stale particle handle') }
@@ -108,7 +108,7 @@ top of checked leases. Its factory runs only when no reusable value is available
 and the fixed capacity has not been reached.
 
 ```v
-import antono2.mem
+import antono2.memory
 
 struct Buffer {
 mut:
@@ -126,7 +126,7 @@ fn reset_buffer(buffer Buffer) Buffer {
 }
 
 fn main() {
-	mut buffers := mem.new_object_pool[Buffer](16, 4, make_buffer,
+	mut buffers := memory.new_object_pool[Buffer](16, 4, make_buffer,
 		reset_buffer) or { panic(err) }
 
 	handle := buffers.acquire() or { panic(err) }
@@ -152,10 +152,10 @@ owning the resource itself. It uses deterministic first fit, returns checked
 allocation records, and coalesces adjacent ranges when they are released.
 
 ```v
-import antono2.mem
+import antono2.memory
 
 fn main() {
-	mut block := mem.new_range_allocator(256 * 1024 * 1024)
+	mut block := memory.new_range_allocator(256 * 1024 * 1024)
 	vertex_memory := block.allocate(48 * 1024, 256) or { panic(err) }
 
 	println('bind at offset ${vertex_memory.offset}')
@@ -183,10 +183,10 @@ lifetime. Individual ranges are not released; `reset()` invalidates all of them
 at once while preserving the peak-use statistic.
 
 ```v
-import antono2.mem
+import antono2.memory
 
 fn main() {
-	mut frame_arena := mem.new_linear_allocator(4 * 1024 * 1024)
+	mut frame_arena := memory.new_linear_allocator(4 * 1024 * 1024)
 	vertices := frame_arena.allocate(96 * 1024, 16) or { panic(err) }
 	uniforms := frame_arena.allocate(256, 256) or { panic(err) }
 
@@ -210,10 +210,10 @@ the same order they were created. It is designed for staging buffers, streaming
 data, and resources whose lifetime follows a GPU submission or producer queue.
 
 ```v
-import antono2.mem
+import antono2.memory
 
 fn main() {
-	mut uploads := mem.new_ring_allocator(64 * 1024 * 1024)
+	mut uploads := memory.new_ring_allocator(64 * 1024 * 1024)
 	frame_0 := uploads.allocate(4 * 1024, 256) or { panic(err) }
 	frame_1 := uploads.allocate(8 * 1024, 256) or { panic(err) }
 
@@ -241,10 +241,10 @@ size. Allocation splits larger blocks; release recursively coalesces free
 buddies.
 
 ```v
-import antono2.mem
+import antono2.memory
 
 fn main() {
-	mut pages := mem.new_buddy_allocator(64 * 1024 * 1024, 256) or { panic(err) }
+	mut pages := memory.new_buddy_allocator(64 * 1024 * 1024, 256) or { panic(err) }
 	allocation := pages.allocate(6000, 4096) or { panic(err) }
 
 	assert allocation.offset % 4096 == 0

@@ -1,4 +1,4 @@
-module mem
+module memory
 
 const buddy_node_free = u8(0)
 const buddy_node_split = u8(1)
