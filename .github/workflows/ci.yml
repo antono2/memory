@@ -57,3 +57,14 @@ jobs:
           v run examples/linear_allocator
           v run examples/ring_allocator
           v run examples/buddy_allocator
+
+  sanitizers:
+    name: Sanitizers / Linux
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: prantlf/setup-v-action@v4
+        with:
+          version: 0.5.2
+      - name: Run AddressSanitizer and UndefinedBehaviorSanitizer
+        run: ./scripts/run_sanitizers.sh
