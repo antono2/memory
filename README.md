@@ -321,7 +321,12 @@ v vet .
 v test .
 ./scripts/run_examples.sh
 ./scripts/run_benchmarks.sh --quick
+./scripts/run_sanitizers.sh
 ```
+
+The sanitizer gate requires Clang. It checks allocator tests for invalid memory
+accesses and undefined behavior; leak detection is disabled because V and its
+runtime retain process-lifetime bookkeeping allocations.
 
 ## Roadmap
 

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 - Make the published VPM package the primary installation path and retain
   manual source-checkout instructions for contributors.
+- Add a reproducible Clang AddressSanitizer and UndefinedBehaviorSanitizer test
+  gate for the allocator suite.
 
 ## 1.1.0 - 2026-09-11
 
