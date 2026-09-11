@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Make the published VPM package the primary installation path and retain
+  manual source-checkout instructions for contributors.
+
 ## 1.1.0 - 2026-09-11
 
 - Restore `antono2.memory` as the canonical module, import, repository, and

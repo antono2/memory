@@ -15,12 +15,14 @@ Windows.
 
 ## Install
 
+`antono2.memory` is published on [VPM](https://vpm.vlang.io/packages/antono2.memory):
+
 ```sh
 v install antono2.memory
 ```
 
-Before the VPM entry is published, clone the repository into V's canonical
-nested module path:
+For a source checkout, clone the repository into V's canonical nested module
+path:
 
 ```sh
 mkdir -p ~/.vmodules/antono2
@@ -28,7 +30,7 @@ git clone https://github.com/antono2/memory \
 	~/.vmodules/antono2/memory
 ```
 
-V 0.5.2 cannot infer that nested path from an unregistered Git URL alone.
+V 0.5.2 requires that nested path for dotted module names.
 
 Then import it using its canonical VPM name:
 
@@ -37,7 +39,7 @@ import antono2.memory
 ```
 
 The canonical VPM and import name is `antono2.memory`, matching the repository
-and installed directory.
+and the `antono2/memory` installed directory.
 Projects that still import `generic_pool` should pin the 0.2.0 release until
 they are ready to update their imports.
 
