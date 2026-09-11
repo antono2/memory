@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.1.0 - 2026-09-11
+
 - Restore `antono2.memory` as the canonical module, import, repository, and
   installed-directory identity.
 - Add a deterministic power-of-two `BuddyAllocator` with checked allocation
