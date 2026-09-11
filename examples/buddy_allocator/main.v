@@ -1,9 +1,9 @@
 module main
 
-import antono2.mem
+import antono2.memory
 
 fn main() {
-	mut pages := mem.new_buddy_allocator(64 * 1024, 256) or { panic(err) }
+	mut pages := memory.new_buddy_allocator(64 * 1024, 256) or { panic(err) }
 	uniforms := pages.allocate(700, 256) or { panic(err) }
 	texture_staging := pages.allocate(5000, 4096) or { panic(err) }
 

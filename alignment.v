@@ -1,4 +1,4 @@
-module mem
+module memory
 
 // align_forward returns the first value at or after value that is divisible by
 // alignment. Callers validate that alignment is non-zero before using it.

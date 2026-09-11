@@ -1,10 +1,10 @@
 module main
 
-import antono2.mem
+import antono2.memory
 
 fn main() {
 	mut frame_memory := []u8{len: 1024}
-	mut arena := mem.new_linear_allocator(u64(frame_memory.len))
+	mut arena := memory.new_linear_allocator(u64(frame_memory.len))
 
 	for frame in 0 .. 3 {
 		vertices := arena.allocate(300, 16) or { panic(err) }

@@ -1,10 +1,10 @@
 module main
 
-import antono2.mem
+import antono2.memory
 
 fn main() {
 	mut backing_buffer := []u8{len: 256}
-	mut ranges := mem.new_range_allocator(u64(backing_buffer.len))
+	mut ranges := memory.new_range_allocator(u64(backing_buffer.len))
 
 	vertices := ranges.allocate(36, 16) or { panic(err) }
 	indices := ranges.allocate(12, 4) or { panic(err) }

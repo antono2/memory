@@ -1,4 +1,4 @@
-module mem
+module memory
 
 struct TestItem {
 mut:

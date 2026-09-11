@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Restore `antono2.memory` as the canonical module, import, repository, and
+  installed-directory identity.
 - Add a deterministic power-of-two `BuddyAllocator` with checked allocation
   records, recursive coalescing, occupancy statistics, tests, and an example.
 - Add an independent bitmap-model stress test for deterministic first-fit range
@@ -13,17 +15,15 @@ All notable changes to this project will be documented in this file.
   including fragmentation and occupancy diagnostics.
 - Replay an identical bounded allocation trace for first-fit and buddy benchmark
   comparisons, with success, failure, peak-use, and trace-integrity diagnostics.
-- Run the allocator test suite and canonical `antono2.mem` public-import
+- Run the allocator test suite and canonical `antono2.memory` public-import
   examples on Linux, macOS, and Windows in CI.
 - Add a task-oriented allocator selection guide covering lifetime, release
   order, and fragmentation tradeoffs.
 
 ## 1.0.3 - 2026-09-10
 
-- Use `antono2.mem` consistently as the VPM package, import, repository, and
-  installed-directory identity.
-- Rename the source module declaration from `memory` to `mem` to match V's
-  required leaf-directory name.
+- Record the superseded short-name packaging experiment performed before VPM
+  publication.
 
 ## 1.0.2 - 2026-09-10
 

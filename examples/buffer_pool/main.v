@@ -1,6 +1,6 @@
 module main
 
-import antono2.mem
+import antono2.memory
 
 struct Buffer {
 mut:
@@ -20,7 +20,9 @@ fn reset_buffer(buffer Buffer) Buffer {
 }
 
 fn main() {
-	mut buffers := mem.new_object_pool[Buffer](16, 4, make_buffer, reset_buffer) or { panic(err) }
+	mut buffers := memory.new_object_pool[Buffer](16, 4, make_buffer, reset_buffer) or {
+		panic(err)
+	}
 
 	handle := buffers.acquire() or { panic(err) }
 	mut buffer := buffers.get_mut(handle) or { panic('stale buffer handle') }

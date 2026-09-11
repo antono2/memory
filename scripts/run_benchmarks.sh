@@ -11,6 +11,6 @@ if [ "$operations" = '--quick' ]; then
 fi
 
 mkdir -p "$modules_dir/antono2"
-ln -s "$repo_dir" "$modules_dir/antono2/mem"
+ln -s "$repo_dir" "$modules_dir/antono2/memory"
 
 VMODULES="$modules_dir" v -prod run "$repo_dir/benchmarks" "$operations"

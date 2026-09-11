@@ -1,6 +1,6 @@
 module main
 
-import antono2.mem
+import antono2.memory
 import os
 import time
 
@@ -89,8 +89,8 @@ fn (mut trace AllocationTrace) mix_hash(value u64) {
 }
 
 fn benchmark_slot_pool(operations int) BenchmarkResult {
-	mut pool := mem.new_slot_pool[u64](1024) or { panic(err) }
-	mut handles := []mem.Handle{cap: 1024}
+	mut pool := memory.new_slot_pool[u64](1024) or { panic(err) }
+	mut handles := []memory.Handle{cap: 1024}
 	mut random_source := BenchmarkRandom{
 		state: 0x5107cafe
 	}
@@ -124,10 +124,9 @@ fn reset_benchmark_object(_ u64) u64 {
 }
 
 fn benchmark_object_pool(operations int) BenchmarkResult {
-	mut pool := mem.new_object_pool[u64](1024, 1024, make_benchmark_object, reset_benchmark_object) or {
-		panic(err)
-	}
-	mut handles := []mem.Handle{cap: 1024}
+	mut pool := memory.new_object_pool[u64](1024, 1024, make_benchmark_object,
+		reset_benchmark_object) or { panic(err) }
+	mut handles := []memory.Handle{cap: 1024}
 	mut random_source := BenchmarkRandom{
 		state: 0x0b1ec700
 	}
@@ -159,9 +158,9 @@ fn benchmark_object_pool(operations int) BenchmarkResult {
 }
 
 fn benchmark_range_allocator(operations int) BenchmarkResult {
-	mut allocator := mem.new_range_allocator(1024 * 1024)
+	mut allocator := memory.new_range_allocator(1024 * 1024)
 	mut trace := new_allocation_trace()
-	mut allocations := []mem.RangeAllocation{len: allocator_trace_max_live}
+	mut allocations := []memory.RangeAllocation{len: allocator_trace_max_live}
 	mut allocated := []bool{len: allocator_trace_max_live}
 	mut checksum := u64(0)
 	mut allocation_attempts := 0
@@ -206,9 +205,9 @@ fn benchmark_range_allocator(operations int) BenchmarkResult {
 }
 
 fn benchmark_buddy_allocator(operations int) BenchmarkResult {
-	mut allocator := mem.new_buddy_allocator(1024 * 1024, 16) or { panic(err) }
+	mut allocator := memory.new_buddy_allocator(1024 * 1024, 16) or { panic(err) }
 	mut trace := new_allocation_trace()
-	mut allocations := []mem.BuddyAllocation{len: allocator_trace_max_live}
+	mut allocations := []memory.BuddyAllocation{len: allocator_trace_max_live}
 	mut allocated := []bool{len: allocator_trace_max_live}
 	mut checksum := u64(0)
 	mut allocation_attempts := 0
@@ -249,7 +248,7 @@ fn benchmark_buddy_allocator(operations int) BenchmarkResult {
 }
 
 fn benchmark_linear_allocator(operations int) BenchmarkResult {
-	mut allocator := mem.new_linear_allocator(1024 * 1024)
+	mut allocator := memory.new_linear_allocator(1024 * 1024)
 	mut random_source := BenchmarkRandom{
 		state: 0x1a2b3c4d
 	}
@@ -278,8 +277,8 @@ fn benchmark_linear_allocator(operations int) BenchmarkResult {
 }
 
 fn benchmark_ring_allocator(operations int) BenchmarkResult {
-	mut allocator := mem.new_ring_allocator(1024 * 1024)
-	mut active := []mem.RingAllocation{cap: 2048}
+	mut allocator := memory.new_ring_allocator(1024 * 1024)
+	mut active := []memory.RingAllocation{cap: 2048}
 	mut first_active := 0
 	mut random_source := BenchmarkRandom{
 		state: 0x71f01234
