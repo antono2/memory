@@ -1,9 +1,9 @@
-import antono2.memory.concurrent
+import antono2.memory
 
 const workers = 4
 const allocations_per_worker = 1_000
 
-fn allocate_ranges(mut allocator concurrent.RangeAllocator, worker int, done chan bool) {
+fn allocate_ranges(mut allocator memory.SynchronizedRangeAllocator, worker int, done chan bool) {
 	for step in 0 .. allocations_per_worker {
 		size := u64(8 + (worker + step) % 25)
 		allocation := allocator.allocate(size, 16) or { continue }
@@ -13,7 +13,7 @@ fn allocate_ranges(mut allocator concurrent.RangeAllocator, worker int, done cha
 }
 
 fn main() {
-	mut allocator := concurrent.new_range_allocator(64 * 1024)
+	mut allocator := memory.new_synchronized_range_allocator(64 * 1024)
 	done := chan bool{cap: workers}
 	mut threads := []thread{}
 	for worker in 0 .. workers {
@@ -27,7 +27,7 @@ fn main() {
 	assert stats.used == 0
 	assert stats.largest_free_range == stats.capacity
 
-	mut pages := concurrent.new_buddy_allocator(1024, 16) or { panic(err) }
+	mut pages := memory.new_synchronized_buddy_allocator(1024, 16) or { panic(err) }
 	page := pages.allocate(48, 64) or { panic(err) }
 	assert page.block_size == 64
 	assert pages.release(page)
