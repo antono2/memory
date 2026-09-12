@@ -34,7 +34,7 @@ jobs:
           v -prod run benchmarks 250000 \
             | tee benchmark-results-${{ runner.os }}.txt
       - name: Upload benchmark baseline
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: memory-${{ github.ref_name }}-${{ runner.os }}
           path: modules/antono2/memory/benchmark-results-${{ runner.os }}.txt
