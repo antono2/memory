@@ -192,3 +192,214 @@ fn assert_ring_allocator_invariants(allocator &RingAllocator, active []RingAlloc
 		}
 	}
 }
+
+struct RingModelCandidate {
+	offset         int
+	reserved_start int
+	reserved_size  int
+}
+
+struct RingModelRecord {
+	allocation     RingAllocation
+	reserved_start int
+	reserved_size  int
+}
+
+struct RingReferenceModel {
+	capacity int
+mut:
+	head      int
+	tail      int
+	used      int
+	payload   int
+	peak_used int
+	occupied  []bool
+	records   []RingModelRecord
+}
+
+fn new_ring_reference_model(capacity int) RingReferenceModel {
+	return RingReferenceModel{
+		capacity: capacity
+		occupied: []bool{len: capacity}
+	}
+}
+
+fn align_int_forward(value int, alignment int) int {
+	return (value + alignment - 1) / alignment * alignment
+}
+
+fn (model &RingReferenceModel) allocation_candidate(size int, alignment int) ?RingModelCandidate {
+	if size <= 0 || alignment <= 0 || model.capacity == 0 || size > model.capacity {
+		return none
+	}
+	if model.records.len == 0 {
+		return RingModelCandidate{
+			offset:         0
+			reserved_start: 0
+			reserved_size:  size
+		}
+	}
+	available := model.capacity - model.used
+	if size > available {
+		return none
+	}
+	if model.head < model.tail {
+		aligned_offset := align_int_forward(model.head, alignment)
+		if aligned_offset <= model.tail && size <= model.tail - aligned_offset {
+			return RingModelCandidate{
+				offset:         aligned_offset
+				reserved_start: model.head
+				reserved_size:  aligned_offset - model.head + size
+			}
+		}
+		return none
+	}
+
+	aligned_offset := align_int_forward(model.head, alignment)
+	if aligned_offset <= model.capacity && size <= model.capacity - aligned_offset {
+		reserved_size := aligned_offset - model.head + size
+		if reserved_size <= available {
+			return RingModelCandidate{
+				offset:         aligned_offset
+				reserved_start: model.head
+				reserved_size:  reserved_size
+			}
+		}
+	}
+	wrap_padding := model.capacity - model.head
+	if wrap_padding + size <= available && size <= model.tail {
+		return RingModelCandidate{
+			offset:         0
+			reserved_start: model.head
+			reserved_size:  wrap_padding + size
+		}
+	}
+	return none
+}
+
+fn (mut model RingReferenceModel) commit(allocation RingAllocation, candidate RingModelCandidate) {
+	for distance in 0 .. candidate.reserved_size {
+		index := (candidate.reserved_start + distance) % model.capacity
+		assert !model.occupied[index]
+		model.occupied[index] = true
+	}
+	model.records << RingModelRecord{
+		allocation:     allocation
+		reserved_start: candidate.reserved_start
+		reserved_size:  candidate.reserved_size
+	}
+	model.head = (candidate.reserved_start + candidate.reserved_size) % model.capacity
+	model.used += candidate.reserved_size
+	model.payload += int(allocation.size)
+	if model.used > model.peak_used {
+		model.peak_used = model.used
+	}
+}
+
+fn (mut model RingReferenceModel) release_oldest() RingAllocation {
+	record := model.records[0]
+	for distance in 0 .. record.reserved_size {
+		index := (record.reserved_start + distance) % model.capacity
+		assert model.occupied[index]
+		model.occupied[index] = false
+	}
+	model.used -= record.reserved_size
+	model.payload -= int(record.allocation.size)
+	model.tail = (record.reserved_start + record.reserved_size) % model.capacity
+	model.records.delete(0)
+	if model.records.len == 0 {
+		model.head = 0
+		model.tail = 0
+		model.used = 0
+		model.payload = 0
+	}
+	return record.allocation
+}
+
+fn (model &RingReferenceModel) largest_contiguous_free() int {
+	if model.records.len == 0 {
+		return model.capacity
+	}
+	if model.used == model.capacity {
+		return 0
+	}
+	if model.head < model.tail {
+		return model.tail - model.head
+	}
+	end_space := model.capacity - model.head
+	return if end_space > model.tail { end_space } else { model.tail }
+}
+
+fn assert_ring_matches_reference_model(allocator &RingAllocator, model &RingReferenceModel) {
+	stats := allocator.stats()
+	assert stats.capacity == u64(model.capacity)
+	assert stats.used == u64(model.used)
+	assert stats.payload == u64(model.payload)
+	assert stats.padding == u64(model.used - model.payload)
+	assert stats.free == u64(model.capacity - model.used)
+	assert stats.peak_used == u64(model.peak_used)
+	assert stats.allocation_count == model.records.len
+	assert stats.largest_contiguous_free == u64(model.largest_contiguous_free())
+	mut occupied_count := 0
+	for is_occupied in model.occupied {
+		if is_occupied {
+			occupied_count++
+		}
+	}
+	assert occupied_count == model.used
+}
+
+fn test_ring_allocator_matches_independent_fifo_model() {
+	capacity := 127
+	alignments := [1, 2, 3, 5, 7, 8, 16, 31]
+	mut allocator := new_ring_allocator(u64(capacity))
+	mut model := new_ring_reference_model(capacity)
+	mut state := u32(0xf1f0cafe)
+
+	for step in 0 .. 20_000 {
+		state = state * 1_664_525 + 1_013_904_223
+		if model.records.len > 0 && state % 4 == 0 {
+			allocation := model.release_oldest()
+			assert allocator.release(allocation)
+		} else {
+			size := 1 + int((state >> 12) % 29)
+			alignment := alignments[int((state >> 24) % u32(alignments.len))]
+			before := allocator.stats()
+			if candidate := model.allocation_candidate(size, alignment) {
+				allocation := allocator.allocate(u64(size), u64(alignment)) or {
+					panic('model found offset ${candidate.offset}, allocator failed: ${err}')
+				}
+				assert allocation.offset == u64(candidate.offset)
+				model.commit(allocation, candidate)
+			} else {
+				if allocation := allocator.allocate(u64(size), u64(alignment)) {
+					assert false, 'allocator returned unexpected range at ${allocation.offset}'
+				}
+				assert allocator.stats() == before
+			}
+		}
+		if step % 50 == 0 {
+			assert_ring_matches_reference_model(allocator, &model)
+		}
+	}
+
+	for model.records.len > 0 {
+		allocation := model.release_oldest()
+		assert allocator.release(allocation)
+	}
+	assert_ring_matches_reference_model(allocator, &model)
+}
+
+fn test_ring_allocator_allocation_ids_skip_zero_and_live_ids() {
+	mut allocator := new_ring_allocator(4)
+	first := allocator.allocate(1, 1) or { panic(err) }
+	allocator.next_id = max_u64
+	wrapped := allocator.allocate(1, 1) or { panic(err) }
+	after_wrap := allocator.allocate(1, 1) or { panic(err) }
+
+	assert first.id == 1
+	assert wrapped.id == max_u64
+	assert after_wrap.id == 2
+	assert first.id != wrapped.id
+	assert wrapped.id != after_wrap.id
+}

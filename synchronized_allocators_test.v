@@ -41,3 +41,101 @@ fn test_synchronized_allocators_reset_live_allocations() {
 	assert !buddies.contains(buddy_allocation)
 	assert buddies.free_bytes() == buddies.capacity()
 }
+
+struct SynchronizedRangePair {
+	plain  RangeAllocation
+	locked RangeAllocation
+}
+
+struct SynchronizedBuddyPair {
+	plain  BuddyAllocation
+	locked BuddyAllocation
+}
+
+fn test_synchronized_range_allocator_matches_plain_trace() {
+	mut plain := new_range_allocator(4096)
+	mut locked := new_synchronized_range_allocator(4096)
+	mut active := []SynchronizedRangePair{}
+	alignments := [u64(1), 2, 3, 4, 8, 16, 31, 64]
+	mut state := u32(0x5a11ce55)
+
+	for _ in 0 .. 10_000 {
+		state = state * 1_664_525 + 1_013_904_223
+		if active.len > 0 && state % 3 == 0 {
+			index := int((state >> 8) % u32(active.len))
+			pair := active[index]
+			assert plain.release(pair.plain)
+			assert locked.release(pair.locked)
+			active.delete(index)
+		} else {
+			size := u64(1 + (state >> 12) % 193)
+			alignment := alignments[int((state >> 24) % u32(alignments.len))]
+			if plain_allocation := plain.allocate(size, alignment) {
+				locked_allocation := locked.allocate(size, alignment) or {
+					panic('synchronized range allocator diverged: ${err}')
+				}
+				assert locked_allocation.offset == plain_allocation.offset
+				assert locked_allocation.size == plain_allocation.size
+				active << SynchronizedRangePair{
+					plain:  plain_allocation
+					locked: locked_allocation
+				}
+			} else {
+				if unexpected := locked.allocate(size, alignment) {
+					assert false, 'synchronized allocator unexpectedly returned ${unexpected.offset}'
+				}
+			}
+		}
+		assert locked.stats() == plain.stats()
+	}
+
+	for pair in active {
+		assert plain.release(pair.plain)
+		assert locked.release(pair.locked)
+	}
+	assert locked.stats() == plain.stats()
+}
+
+fn test_synchronized_buddy_allocator_matches_plain_trace() {
+	mut plain := new_buddy_allocator(4096, 8) or { panic(err) }
+	mut locked := new_synchronized_buddy_allocator(4096, 8) or { panic(err) }
+	mut active := []SynchronizedBuddyPair{}
+	mut state := u32(0xbaddcafe)
+
+	for _ in 0 .. 10_000 {
+		state = state * 1_664_525 + 1_013_904_223
+		if active.len > 0 && state % 3 == 0 {
+			index := int((state >> 8) % u32(active.len))
+			pair := active[index]
+			assert plain.release(pair.plain)
+			assert locked.release(pair.locked)
+			active.delete(index)
+		} else {
+			size := u64(1 + (state >> 12) % 257)
+			alignment := u64(1) << u32((state >> 28) % 10)
+			if plain_allocation := plain.allocate(size, alignment) {
+				locked_allocation := locked.allocate(size, alignment) or {
+					panic('synchronized buddy allocator diverged: ${err}')
+				}
+				assert locked_allocation.offset == plain_allocation.offset
+				assert locked_allocation.size == plain_allocation.size
+				assert locked_allocation.block_size == plain_allocation.block_size
+				active << SynchronizedBuddyPair{
+					plain:  plain_allocation
+					locked: locked_allocation
+				}
+			} else {
+				if unexpected := locked.allocate(size, alignment) {
+					assert false, 'synchronized allocator unexpectedly returned ${unexpected.offset}'
+				}
+			}
+		}
+		assert locked.stats() == plain.stats()
+	}
+
+	for pair in active {
+		assert plain.release(pair.plain)
+		assert locked.release(pair.locked)
+	}
+	assert locked.stats() == plain.stats()
+}
