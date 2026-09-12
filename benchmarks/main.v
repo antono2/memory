@@ -160,8 +160,7 @@ fn benchmark_object_pool(operations int) BenchmarkResult {
 fn benchmark_range_allocator(operations int) BenchmarkResult {
 	mut allocator := memory.new_range_allocator(1024 * 1024)
 	mut trace := new_allocation_trace()
-	mut allocations := []memory.RangeAllocation{len: allocator_trace_max_live}
-	mut allocated := []bool{len: allocator_trace_max_live}
+	mut allocations := []?memory.RangeAllocation{len: allocator_trace_max_live}
 	mut checksum := u64(0)
 	mut allocation_attempts := 0
 	mut allocation_failures := 0
@@ -174,7 +173,6 @@ fn benchmark_range_allocator(operations int) BenchmarkResult {
 			allocation_attempts++
 			if allocation := allocator.allocate(operation.size, operation.alignment) {
 				allocations[operation.token] = allocation
-				allocated[operation.token] = true
 				if allocator.used_bytes() > peak_used {
 					peak_used = allocator.used_bytes()
 				}
@@ -182,13 +180,12 @@ fn benchmark_range_allocator(operations int) BenchmarkResult {
 				allocation_failures++
 			}
 		} else {
-			if allocated[operation.token] {
-				allocation := allocations[operation.token]
+			if allocation := allocations[operation.token] {
 				checksum += allocation.offset
 				if !allocator.release(allocation) {
 					panic('live range allocation was rejected')
 				}
-				allocated[operation.token] = false
+				allocations[operation.token] = none
 				releases++
 			}
 		}
@@ -207,8 +204,7 @@ fn benchmark_range_allocator(operations int) BenchmarkResult {
 fn benchmark_buddy_allocator(operations int) BenchmarkResult {
 	mut allocator := memory.new_buddy_allocator(1024 * 1024, 16) or { panic(err) }
 	mut trace := new_allocation_trace()
-	mut allocations := []memory.BuddyAllocation{len: allocator_trace_max_live}
-	mut allocated := []bool{len: allocator_trace_max_live}
+	mut allocations := []?memory.BuddyAllocation{len: allocator_trace_max_live}
 	mut checksum := u64(0)
 	mut allocation_attempts := 0
 	mut allocation_failures := 0
@@ -220,18 +216,16 @@ fn benchmark_buddy_allocator(operations int) BenchmarkResult {
 			allocation_attempts++
 			if allocation := allocator.allocate(operation.size, operation.alignment) {
 				allocations[operation.token] = allocation
-				allocated[operation.token] = true
 			} else {
 				allocation_failures++
 			}
 		} else {
-			if allocated[operation.token] {
-				allocation := allocations[operation.token]
+			if allocation := allocations[operation.token] {
 				checksum += allocation.offset
 				if !allocator.release(allocation) {
 					panic('live buddy allocation was rejected')
 				}
-				allocated[operation.token] = false
+				allocations[operation.token] = none
 				releases++
 			}
 		}
@@ -244,6 +238,190 @@ fn benchmark_buddy_allocator(operations int) BenchmarkResult {
 		checksum:   checksum + stats.reserved
 		detail:     'trace=v2 allocations=${allocation_attempts - allocation_failures}/${allocation_attempts} failed=${allocation_failures} releases=${releases} live=${stats.allocation_count} payload=${stats.payload} reserved=${stats.reserved} internal=${stats.internal_fragmentation} peak=${stats.peak_reserved} largest_free=${stats.largest_free_block}'
 		trace_hash: trace.hash
+	}
+}
+
+fn benchmark_synchronized_range_allocator(operations int) BenchmarkResult {
+	mut allocator := memory.new_synchronized_range_allocator(1024 * 1024)
+	mut trace := new_allocation_trace()
+	mut allocations := []?memory.RangeAllocation{len: allocator_trace_max_live}
+	mut checksum := u64(0)
+	mut allocation_attempts := 0
+	mut allocation_failures := 0
+	mut releases := 0
+	mut peak_used := u64(0)
+	start := time.sys_mono_now()
+	for _ in 0 .. operations {
+		operation := trace.next()
+		if operation.is_allocate {
+			allocation_attempts++
+			if allocation := allocator.allocate(operation.size, operation.alignment) {
+				allocations[operation.token] = allocation
+				if allocator.used_bytes() > peak_used {
+					peak_used = allocator.used_bytes()
+				}
+			} else {
+				allocation_failures++
+			}
+		} else if allocation := allocations[operation.token] {
+			checksum += allocation.offset
+			if !allocator.release(allocation) {
+				panic('live synchronized range allocation was rejected')
+			}
+			allocations[operation.token] = none
+			releases++
+		}
+	}
+	stats := allocator.stats()
+	return BenchmarkResult{
+		name:       'range synchronized'
+		operations: operations
+		elapsed_ns: time.sys_mono_now() - start
+		checksum:   checksum + stats.used
+		detail:     'trace=v2 allocations=${allocation_attempts - allocation_failures}/${allocation_attempts} failed=${allocation_failures} releases=${releases} live=${stats.allocation_count} used=${stats.used} peak=${peak_used} free_ranges=${stats.free_range_count} largest_free=${stats.largest_free_range}'
+		trace_hash: trace.hash
+	}
+}
+
+fn benchmark_synchronized_buddy_allocator(operations int) BenchmarkResult {
+	mut allocator := memory.new_synchronized_buddy_allocator(1024 * 1024, 16) or { panic(err) }
+	mut trace := new_allocation_trace()
+	mut allocations := []?memory.BuddyAllocation{len: allocator_trace_max_live}
+	mut checksum := u64(0)
+	mut allocation_attempts := 0
+	mut allocation_failures := 0
+	mut releases := 0
+	start := time.sys_mono_now()
+	for _ in 0 .. operations {
+		operation := trace.next()
+		if operation.is_allocate {
+			allocation_attempts++
+			if allocation := allocator.allocate(operation.size, operation.alignment) {
+				allocations[operation.token] = allocation
+			} else {
+				allocation_failures++
+			}
+		} else if allocation := allocations[operation.token] {
+			checksum += allocation.offset
+			if !allocator.release(allocation) {
+				panic('live synchronized buddy allocation was rejected')
+			}
+			allocations[operation.token] = none
+			releases++
+		}
+	}
+	stats := allocator.stats()
+	return BenchmarkResult{
+		name:       'buddy synchronized'
+		operations: operations
+		elapsed_ns: time.sys_mono_now() - start
+		checksum:   checksum + stats.reserved
+		detail:     'trace=v2 allocations=${allocation_attempts - allocation_failures}/${allocation_attempts} failed=${allocation_failures} releases=${releases} live=${stats.allocation_count} payload=${stats.payload} reserved=${stats.reserved} internal=${stats.internal_fragmentation} peak=${stats.peak_reserved} largest_free=${stats.largest_free_block}'
+		trace_hash: trace.hash
+	}
+}
+
+fn synchronized_range_benchmark_worker(mut allocator memory.SynchronizedRangeAllocator, worker int, operations int, done chan u64) {
+	mut random_source := BenchmarkRandom{
+		state: u32(0x51a2cafe) ^ u32(worker) * u32(0x1f123bb5)
+	}
+	mut checksum := u64(0)
+	for _ in 0 .. operations {
+		random := random_source.next()
+		size := u64(16 + (random >> 12) % 2033)
+		alignment := u64(1) << u32((random >> 28) % 9)
+		allocation := allocator.allocate(size, alignment) or { panic(err) }
+		checksum += allocation.offset + allocation.size
+		if !allocator.release(allocation) {
+			panic('live synchronized range allocation was rejected by worker ${worker}')
+		}
+	}
+	done <- checksum
+}
+
+fn synchronized_buddy_benchmark_worker(mut allocator memory.SynchronizedBuddyAllocator, worker int, operations int, done chan u64) {
+	mut random_source := BenchmarkRandom{
+		state: u32(0xbaddcafe) ^ u32(worker) * u32(0x1f123bb5)
+	}
+	mut checksum := u64(0)
+	for _ in 0 .. operations {
+		random := random_source.next()
+		size := u64(16 + (random >> 12) % 2033)
+		alignment := u64(1) << u32((random >> 28) % 9)
+		allocation := allocator.allocate(size, alignment) or { panic(err) }
+		checksum += allocation.offset + allocation.block_size
+		if !allocator.release(allocation) {
+			panic('live synchronized buddy allocation was rejected by worker ${worker}')
+		}
+	}
+	done <- checksum
+}
+
+fn worker_operation_count(total_operations int, workers int, worker int) int {
+	base := total_operations / workers
+	remainder := total_operations % workers
+	return base + if worker < remainder {
+		1
+	} else {
+		0
+	}
+}
+
+fn benchmark_synchronized_range_contention(operations int, workers int) BenchmarkResult {
+	mut allocator := memory.new_synchronized_range_allocator(1024 * 1024)
+	done := chan u64{cap: workers}
+	mut threads := []thread{cap: workers}
+	start := time.sys_mono_now()
+	for worker in 0 .. workers {
+		worker_operations := worker_operation_count(operations, workers, worker)
+		threads << spawn synchronized_range_benchmark_worker(mut allocator, worker,
+			worker_operations, done)
+	}
+	mut checksum := u64(0)
+	for _ in 0 .. workers {
+		checksum += <-done
+	}
+	threads.wait()
+	elapsed_ns := time.sys_mono_now() - start
+	stats := allocator.stats()
+	if stats.used != 0 || stats.allocation_count != 0 {
+		panic('synchronized range contention benchmark leaked allocations')
+	}
+	return BenchmarkResult{
+		name:       'range synchronized ${workers} workers'
+		operations: operations
+		elapsed_ns: elapsed_ns
+		checksum:   checksum
+		detail:     'workers=${workers} final_used=${stats.used}'
+	}
+}
+
+fn benchmark_synchronized_buddy_contention(operations int, workers int) BenchmarkResult {
+	mut allocator := memory.new_synchronized_buddy_allocator(1024 * 1024, 16) or { panic(err) }
+	done := chan u64{cap: workers}
+	mut threads := []thread{cap: workers}
+	start := time.sys_mono_now()
+	for worker in 0 .. workers {
+		worker_operations := worker_operation_count(operations, workers, worker)
+		threads << spawn synchronized_buddy_benchmark_worker(mut allocator, worker,
+			worker_operations, done)
+	}
+	mut checksum := u64(0)
+	for _ in 0 .. workers {
+		checksum += <-done
+	}
+	threads.wait()
+	elapsed_ns := time.sys_mono_now() - start
+	stats := allocator.stats()
+	if stats.reserved != 0 || stats.allocation_count != 0 {
+		panic('synchronized buddy contention benchmark leaked allocations')
+	}
+	return BenchmarkResult{
+		name:       'buddy synchronized ${workers} workers'
+		operations: operations
+		elapsed_ns: elapsed_ns
+		checksum:   checksum
+		detail:     'workers=${workers} final_reserved=${stats.reserved}'
 	}
 }
 
@@ -338,7 +516,7 @@ fn main() {
 		eprintln('operation count must be greater than zero')
 		exit(2)
 	}
-	println('deterministic allocator benchmark: operations=${operations}, seed set=v2')
+	println('allocator benchmark: operations=${operations}, suite=v3, trace=v2')
 	print_result(benchmark_slot_pool(operations))
 	print_result(benchmark_object_pool(operations))
 	range_result := benchmark_range_allocator(operations)
@@ -348,6 +526,24 @@ fn main() {
 	}
 	print_result(range_result)
 	print_result(buddy_result)
+	synchronized_range_result := benchmark_synchronized_range_allocator(operations)
+	synchronized_buddy_result := benchmark_synchronized_buddy_allocator(operations)
+	if synchronized_range_result.trace_hash != range_result.trace_hash
+		|| synchronized_range_result.checksum != range_result.checksum {
+		panic('synchronized range allocator diverged from the plain trace')
+	}
+	if synchronized_buddy_result.trace_hash != buddy_result.trace_hash
+		|| synchronized_buddy_result.checksum != buddy_result.checksum {
+		panic('synchronized buddy allocator diverged from the plain trace')
+	}
+	print_result(synchronized_range_result)
+	print_result(synchronized_buddy_result)
 	print_result(benchmark_linear_allocator(operations))
 	print_result(benchmark_ring_allocator(operations))
+	for workers in [1, 2, 4, 8] {
+		print_result(benchmark_synchronized_range_contention(operations, workers))
+	}
+	for workers in [1, 2, 4, 8] {
+		print_result(benchmark_synchronized_buddy_contention(operations, workers))
+	}
 }

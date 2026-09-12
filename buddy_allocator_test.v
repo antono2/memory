@@ -159,3 +159,171 @@ fn assert_buddy_allocator_invariants(allocator &BuddyAllocator, active []BuddyAl
 	assert stats.reserved == reserved
 	assert stats.payload == payload
 }
+
+struct BuddyModelAllocation {
+	allocation  BuddyAllocation
+	first_block int
+	block_count int
+}
+
+fn model_buddy_block_count(size int, alignment int, minimum_block_size int) int {
+	mut required := size
+	if alignment > required {
+		required = alignment
+	}
+	mut block_size := minimum_block_size
+	for block_size < required {
+		block_size *= 2
+	}
+	return block_size / minimum_block_size
+}
+
+fn model_buddy_first_free_block(occupied []bool, block_count int) ?int {
+	if block_count <= 0 || block_count > occupied.len {
+		return none
+	}
+	mut first := 0
+	for first + block_count <= occupied.len {
+		mut available := true
+		for index in first .. first + block_count {
+			if occupied[index] {
+				available = false
+				break
+			}
+		}
+		if available {
+			return first
+		}
+		first += block_count
+	}
+	return none
+}
+
+fn model_buddy_largest_free_block(occupied []bool, minimum_block_size int) u64 {
+	mut block_count := occupied.len
+	for block_count > 0 {
+		mut first := 0
+		for first < occupied.len {
+			mut available := true
+			for index in first .. first + block_count {
+				if occupied[index] {
+					available = false
+					break
+				}
+			}
+			if available {
+				return u64(block_count * minimum_block_size)
+			}
+			first += block_count
+		}
+		block_count /= 2
+	}
+	return 0
+}
+
+fn test_buddy_allocator_matches_independent_block_model() {
+	capacity := 512
+	minimum_block_size := 8
+	mut allocator := new_buddy_allocator(u64(capacity), u64(minimum_block_size)) or { panic(err) }
+	mut occupied := []bool{len: capacity / minimum_block_size}
+	mut active := []BuddyModelAllocation{}
+	mut state := u32(0xb10c5eed)
+	mut model_reserved := u64(0)
+	mut model_peak_reserved := u64(0)
+
+	for step in 0 .. 20_000 {
+		state = state * 1_664_525 + 1_013_904_223
+		if active.len > 0 && state % 3 == 0 {
+			index := int((state >> 8) % u32(active.len))
+			record := active[index]
+			assert allocator.release(record.allocation)
+			for block in record.first_block .. record.first_block + record.block_count {
+				assert occupied[block]
+				occupied[block] = false
+			}
+			model_reserved -= u64(record.block_count * minimum_block_size)
+			active.delete(index)
+		} else {
+			size := 1 + int((state >> 12) % 127)
+			alignment := 1 << int((state >> 28) % 9)
+			block_count := model_buddy_block_count(size, alignment, minimum_block_size)
+			before := allocator.stats()
+			if first_block := model_buddy_first_free_block(occupied, block_count) {
+				allocation := allocator.allocate(u64(size), u64(alignment)) or {
+					panic('model found block ${first_block}, allocator failed: ${err}')
+				}
+				assert allocation.offset == u64(first_block * minimum_block_size)
+				assert allocation.block_size == u64(block_count * minimum_block_size)
+				for block in first_block .. first_block + block_count {
+					assert !occupied[block]
+					occupied[block] = true
+				}
+				active << BuddyModelAllocation{
+					allocation:  allocation
+					first_block: first_block
+					block_count: block_count
+				}
+				model_reserved += u64(block_count * minimum_block_size)
+				if model_reserved > model_peak_reserved {
+					model_peak_reserved = model_reserved
+				}
+			} else {
+				if allocation := allocator.allocate(u64(size), u64(alignment)) {
+					assert false, 'allocator returned unexpected block at ${allocation.offset}'
+				}
+				assert allocator.stats() == before
+			}
+		}
+
+		if step % 100 == 0 {
+			mut occupied_reserved := u64(0)
+			for is_occupied in occupied {
+				if is_occupied {
+					occupied_reserved += u64(minimum_block_size)
+				}
+			}
+			assert occupied_reserved == model_reserved
+			mut model_payload := u64(0)
+			for record in active {
+				model_payload += record.allocation.size
+			}
+			stats := allocator.stats()
+			assert stats.reserved == model_reserved
+			assert stats.payload == model_payload
+			assert stats.internal_fragmentation == model_reserved - model_payload
+			assert stats.free == u64(capacity) - model_reserved
+			assert stats.peak_reserved == model_peak_reserved
+			assert stats.allocation_count == active.len
+			assert stats.largest_free_block == model_buddy_largest_free_block(occupied,
+				minimum_block_size)
+		}
+	}
+
+	for record in active {
+		assert allocator.release(record.allocation)
+		for block in record.first_block .. record.first_block + record.block_count {
+			assert occupied[block]
+			occupied[block] = false
+		}
+	}
+	final_stats := allocator.stats()
+	assert final_stats.reserved == 0
+	assert final_stats.payload == 0
+	assert final_stats.peak_reserved == model_peak_reserved
+	assert final_stats.largest_free_block == u64(capacity)
+	assert model_buddy_largest_free_block(occupied, minimum_block_size) == u64(capacity)
+}
+
+fn test_buddy_allocator_allocation_ids_skip_zero_and_live_ids() {
+	mut allocator := new_buddy_allocator(16, 4) or { panic(err) }
+	first := allocator.allocate(4, 1) or { panic(err) }
+	allocator.next_id = max_u64
+	wrapped := allocator.allocate(4, 1) or { panic(err) }
+	after_wrap := allocator.allocate(4, 1) or { panic(err) }
+
+	assert first.id == 1
+	assert wrapped.id == max_u64
+	assert after_wrap.id == 2
+	assert first.id != wrapped.id
+	assert wrapped.id != after_wrap.id
+}

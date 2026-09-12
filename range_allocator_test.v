@@ -131,6 +131,36 @@ fn test_range_allocator_handles_alignment_overflow() {
 	assert allocator.stats().largest_free_range == max_u64
 }
 
+fn test_zero_capacity_range_allocator_reports_consistent_stats() {
+	mut allocator := new_range_allocator(0)
+	assert allocator.capacity() == 0
+	assert allocator.used_bytes() == 0
+	assert allocator.free_bytes() == 0
+	assert allocator.allocation_count() == 0
+	assert allocator.stats() == RangeStats{}
+	before := allocator.stats()
+	if _ := allocator.allocate(1, 1) {
+		assert false, 'zero-capacity allocator must reject allocations'
+	} else {
+		assert err.msg().contains('exhausted')
+	}
+	assert allocator.stats() == before
+}
+
+fn test_range_allocator_allocation_ids_skip_zero_and_live_ids() {
+	mut allocator := new_range_allocator(4)
+	first := allocator.allocate(1, 1) or { panic(err) }
+	allocator.next_id = max_u64
+	wrapped := allocator.allocate(1, 1) or { panic(err) }
+	after_wrap := allocator.allocate(1, 1) or { panic(err) }
+
+	assert first.id == 1
+	assert wrapped.id == max_u64
+	assert after_wrap.id == 2
+	assert first.id != wrapped.id
+	assert wrapped.id != after_wrap.id
+}
+
 fn test_range_allocator_deterministic_stress() {
 	capacity := u64(4096)
 	mut allocator := new_range_allocator(capacity)

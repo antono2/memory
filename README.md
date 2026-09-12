@@ -44,6 +44,9 @@ and the `antono2/memory` installed directory.
 Projects that still import `generic_pool` should pin the 0.2.0 release until
 they are ready to update their imports.
 
+See [API stability and support](STABILITY.md) for the 1.x compatibility,
+threading, ownership-token, and compiler-support guarantees.
+
 ## Choosing an allocator
 
 | Type | Use it when | Release order | Main tradeoff |
@@ -63,6 +66,22 @@ use returned offsets or handles to address it, and destroy the backing resource
 only after its allocations are no longer live. The lightweight core types are
 not internally synchronized; use the explicitly named `Synchronized` variants
 when allocator metadata is shared between threads.
+
+## Complexity and synchronization
+
+| Type | Allocate/acquire | Release/reset | Query notes |
+| --- | --- | --- | --- |
+| `SlotPool[T]` | O(1) | O(1) release; O(capacity) clear | O(1) lookup; external synchronization required |
+| `ObjectPool[T]` | O(1) plus factory | O(1) plus reset callback; O(capacity) release-all | External synchronization required |
+| `RangeAllocator` | O(free ranges) | O(free ranges) | Statistics scan free ranges; external synchronization required |
+| `LinearAllocator` | O(1) | O(1) whole-arena reset | O(1) queries; external synchronization required |
+| `RingAllocator` | O(1) | Amortized O(1) FIFO release | `contains` scans live records; external synchronization required |
+| `BuddyAllocator` | O(log(capacity/minimum block)) | O(log(capacity/minimum block)) | Largest-block statistics may scan the buddy tree; external synchronization required |
+| `SynchronizedRangeAllocator` | Range cost plus write lock | Range cost plus write lock | Read-only queries use a shared lock |
+| `SynchronizedBuddyAllocator` | Buddy cost plus write lock | Buddy cost plus write lock | Read-only queries use a shared lock |
+
+`f` denotes the current number of free ranges. Callback execution time and
+thread scheduling are outside these bounds.
 
 ## Slot pool
 
@@ -350,12 +369,17 @@ Run the deterministic churn workloads with production compiler optimizations:
 
 Pass an operation count to shorten or extend a run, or use `--quick` for the CI
 smoke workload. The harness covers slot and object reuse, fragmented first-fit
-ranges, power-of-two buddy allocation, linear allocate/reset cycles, and FIFO
-ring streaming. Range and buddy allocation replay the same bounded request and
-release trace, verified by a trace hash, and report successful allocations,
-failures, peak occupancy, and fragmentation alongside timing. The harness
-deliberately enforces no universal performance threshold; compare results only
-on the same machine, toolchain, and trace version.
+ranges, power-of-two buddy allocation, linear allocate/reset cycles, FIFO ring
+streaming, synchronized-wrapper overhead, and synchronized range and buddy
+contention with 1, 2, 4, and 8 workers. Plain and synchronized allocators replay
+the same bounded request and release trace, verified by trace hashes and result
+checksums.
+
+CI stores the quick Linux result as a downloadable text artifact. Each release
+tag also records optimized Linux, macOS, and Windows baselines. These results
+are diagnostic: the project enforces correctness and trace equivalence, not a
+universal timing threshold. Compare timings only on equivalent machines,
+toolchains, operation counts, and trace versions.
 
 ## Verify
 
@@ -380,8 +404,9 @@ collector.
 
 ## Roadmap
 
-- benchmark baselines across representative machines and V compiler versions
-- specialized allocation policies driven by benchmark results
+- realistic allocation traces collected from downstream integrations
+- specialized allocation policies only when those traces show a measurable need
+- safe lease- or closure-based synchronized pool access if concrete use cases require it
 - additional integrations that keep platform APIs outside the core module
 
 ## License

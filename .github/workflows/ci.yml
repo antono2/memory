@@ -28,12 +28,21 @@ jobs:
         run: v fmt -verify .
       - name: Vet
         run: v vet .
+      - name: Validate public API documentation
+        run: v doc -f none -m .
       - name: Test
         run: v test .
       - name: Run examples
         run: ./scripts/run_examples.sh
       - name: Run deterministic benchmark smoke test
-        run: ./scripts/run_benchmarks.sh --quick
+        run: ./scripts/run_benchmarks.sh --quick | tee benchmark-smoke.txt
+      - name: Upload benchmark smoke results
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-benchmark-smoke-${{ github.run_id }}
+          path: modules/antono2/memory/benchmark-smoke.txt
+          if-no-files-found: error
+          retention-days: 14
 
   platform-tests:
     name: Test / ${{ matrix.os }}

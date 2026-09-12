@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.4.0 - 2026-09-12
+
+- Add independent block and FIFO reference models for buddy and ring allocation,
+  including 20,000-operation deterministic comparison traces.
+- Prove synchronized range and buddy allocators match their plain counterparts
+  across deterministic success, failure, offset, and statistics traces.
+- Cover zero-capacity state, failed-allocation atomicity, and allocation-ID
+  wraparound without reusing zero or a live identifier.
+- Expand benchmark suite v3 with synchronized-wrapper comparisons and 1, 2, 4,
+  and 8-worker contention workloads.
+- Store benchmark smoke results as CI artifacts and record optimized Linux,
+  macOS, and Windows baseline artifacts for release tags.
+- Document the stable 1.x API surface, ownership-token boundaries, supported V
+  compiler, algorithmic complexity, and synchronization guarantees.
+- Validate root-module API documentation generation in CI.
+
 ## 1.3.1 - 2026-09-12
 
 - Remove the short-lived `antono2.memory.concurrent` compatibility submodule
