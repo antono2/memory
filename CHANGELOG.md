@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.3.0 - 2026-09-12
+
+- Expose synchronized range and buddy allocators directly from
+  `antono2.memory` as explicitly named alternatives to the lightweight default
+  allocators.
+- Preserve the v1.2 `antono2.memory.concurrent` types and constructors as a
+  compatibility layer over the root-module implementations.
+- Update the concurrent example to demonstrate the recommended root-module API.
+
 ## 1.2.0 - 2026-09-12
 
 - Make the published VPM package the primary installation path and retain
