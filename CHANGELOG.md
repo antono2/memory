@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.2.0 - 2026-09-12
+
 - Make the published VPM package the primary installation path and retain
   manual source-checkout instructions for contributors.
 - Add a reproducible Clang AddressSanitizer and UndefinedBehaviorSanitizer test
   gate for the allocator suite.
+- Add an optional `antono2.memory.concurrent` submodule with synchronized range
+  and buddy allocators, multithreaded contention coverage, a runnable example,
+  and a ThreadSanitizer gate.
 
 ## 1.1.0 - 2026-09-11
 
