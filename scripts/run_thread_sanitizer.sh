@@ -18,10 +18,10 @@ mkdir -p "$modules_dir/antono2"
 ln -s "$repo_dir" "$modules_dir/antono2/memory"
 
 # V 0.5.2's default Boehm GC signal handler conflicts with ThreadSanitizer.
-# The allocator wrappers do not depend on a specific GC, so disable it for this
+# The synchronized allocators do not depend on a specific GC, so disable it for this
 # focused race check instead of suppressing ThreadSanitizer diagnostics.
 VMODULES="$modules_dir" v -gc none -cc "$sanitizer_compiler" \
 	-cflags -fsanitize=thread \
 	-cflags -fno-omit-frame-pointer \
 	-ldflags -fsanitize=thread \
-	test "$repo_dir/concurrent"
+	test "$repo_dir/synchronized_allocators_concurrency_test.v"

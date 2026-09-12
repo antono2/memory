@@ -299,10 +299,6 @@ wrapper. Synchronization protects allocator bookkeeping only. Callers must
 still ensure that no thread releases or resets a range while another thread is
 using the corresponding host, file, shared-memory, or GPU resource.
 
-The v1.2 `antono2.memory.concurrent` names remain available as compatibility
-aliases. New code should prefer the root-module names above so one import
-provides both lightweight and synchronized allocation strategies.
-
 The pool APIs intentionally remain unsynchronized because `get()` and
 `get_mut()` return pointers whose use can outlive a method-level lock. Safe
 concurrent pools require a separate copy- or closure-based access API.
@@ -337,7 +333,7 @@ v run examples/range_allocator
 v run examples/linear_allocator
 v run examples/ring_allocator
 v run examples/buddy_allocator
-v run examples/concurrent_allocators
+v run examples/synchronized_allocators
 ```
 
 When working from a source checkout rather than an installed V module, run
@@ -376,7 +372,7 @@ v vet .
 The sanitizer gate requires Clang. It checks allocator tests for invalid memory
 accesses and undefined behavior; leak detection is disabled because V and its
 runtime retain process-lifetime bookkeeping allocations.
-ThreadSanitizer separately checks the concurrent allocator contention tests for
+ThreadSanitizer separately checks the synchronized allocator contention tests for
 data races and unjoined worker threads. That focused gate uses `-gc none`
 because V 0.5.2's default Boehm GC signal handler conflicts with
 ThreadSanitizer; the allocator wrappers themselves do not depend on a garbage

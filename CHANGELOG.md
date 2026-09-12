@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.3.1 - 2026-09-12
+
+- Remove the short-lived `antono2.memory.concurrent` compatibility submodule
+  so the synchronized allocators have one clear, root-module API.
+- Move the multithreaded contention and ThreadSanitizer coverage to the root
+  synchronized allocator implementations.
+- Rename the runnable example to `examples/synchronized_allocators` to match
+  the public type names.
+
 ## 1.3.0 - 2026-09-12
 
 - Expose synchronized range and buddy allocators directly from
