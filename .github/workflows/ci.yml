@@ -37,7 +37,7 @@ jobs:
       - name: Run deterministic benchmark smoke test
         run: ./scripts/run_benchmarks.sh --quick | tee benchmark-smoke.txt
       - name: Upload benchmark smoke results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: memory-benchmark-smoke-${{ github.run_id }}
           path: modules/antono2/memory/benchmark-smoke.txt
