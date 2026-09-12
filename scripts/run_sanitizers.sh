@@ -2,6 +2,8 @@
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+modules_dir=$(mktemp -d "${TMPDIR:-/tmp}/v-memory-sanitizer-modules.XXXXXX")
+trap 'rm -rf "$modules_dir"' EXIT HUP INT TERM
 sanitizer_compiler=${V_SANITIZER_CC:-clang}
 
 if ! command -v "$sanitizer_compiler" >/dev/null 2>&1; then
@@ -15,9 +17,11 @@ ASAN_OPTIONS=${ASAN_OPTIONS:-detect_leaks=0:halt_on_error=1}
 UBSAN_OPTIONS=${UBSAN_OPTIONS:-halt_on_error=1:print_stacktrace=1}
 export ASAN_OPTIONS UBSAN_OPTIONS
 
-cd "$repo_dir"
-v -cc "$sanitizer_compiler" \
+mkdir -p "$modules_dir/antono2"
+ln -s "$repo_dir" "$modules_dir/antono2/memory"
+
+VMODULES="$modules_dir" v -cc "$sanitizer_compiler" \
 	-cflags -fsanitize=address,undefined \
 	-cflags -fno-omit-frame-pointer \
 	-ldflags -fsanitize=address,undefined \
-	test .
+	test "$repo_dir"

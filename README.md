@@ -7,9 +7,10 @@ objects and managing bounded memory and resource ranges in V.
 
 The library includes checked slot and object pools plus range, linear, and ring
 allocators, along with a power-of-two buddy allocator for specialized arenas.
-Each implementation is dependency-free and accompanied by a
-directly runnable example. Optional Vulkan suballocation examples can build on
-the same core without making the general-purpose module Vulkan-specific.
+An optional concurrent submodule adds synchronized range and buddy variants.
+Each implementation is dependency-free and accompanied by a directly runnable
+example. Optional Vulkan suballocation examples can build on the same core
+without making the general-purpose module Vulkan-specific.
 The allocator test suite and public-import examples run on Linux, macOS, and
 Windows.
 
@@ -53,12 +54,15 @@ they are ready to update their imports.
 | `LinearAllocator` | A whole batch shares one lifetime, such as frame or request scratch data | All at once with `reset()` | Individual ranges cannot be released |
 | `RingAllocator` | Allocations are retired in the same order they are created | FIFO | Out-of-order release is rejected |
 | `BuddyAllocator` | Power-of-two splitting and recursive coalescing suit the arena | Any order | Requests consume rounded-up blocks and tree metadata |
+| `concurrent.RangeAllocator` | Multiple threads share first-fit allocation metadata | Any order | Locking serializes mutations |
+| `concurrent.BuddyAllocator` | Multiple threads share buddy-allocation metadata | Any order | Locking serializes mutations |
 
 The allocators manage values or numeric ranges; they do not allocate, map, or
 free an operating-system or GPU resource. Create the backing resource once,
 use returned offsets or handles to address it, and destroy the backing resource
-only after its allocations are no longer live. None of the types is internally
-synchronized.
+only after its allocations are no longer live. The core types are not
+internally synchronized; use the optional `antono2.memory.concurrent` variants
+when allocator metadata is shared between threads.
 
 ## Slot pool
 
@@ -260,6 +264,43 @@ Unlike `RangeAllocator`, the buddy allocator trades internal fragmentation for
 bounded tree depth and automatic recursive coalescing. Statistics report both
 payload and reserved bytes so that tradeoff remains visible.
 
+## Concurrent allocators
+
+The optional `antono2.memory.concurrent` submodule wraps the range and buddy
+allocators with reader/writer mutexes. Mutating operations take an exclusive
+lock, while ownership queries and statistics take a shared read lock.
+
+```v
+import antono2.memory.concurrent
+
+fn worker(mut arena concurrent.RangeAllocator, done chan bool) {
+	allocation := arena.allocate(4096, 256) or { panic(err) }
+	// Use the corresponding backing-memory range here.
+	assert arena.release(allocation)
+	done <- true
+}
+
+fn main() {
+	mut arena := concurrent.new_range_allocator(64 * 1024 * 1024)
+	done := chan bool{cap: 2}
+	first := spawn worker(mut arena, done)
+	second := spawn worker(mut arena, done)
+	_ = <-done
+	_ = <-done
+	first.wait()
+	second.wait()
+}
+```
+
+Keep and share the pointer returned by the constructor; do not copy the
+wrapper. Synchronization protects allocator bookkeeping only. Callers must
+still ensure that no thread releases or resets a range while another thread is
+using the corresponding host, file, shared-memory, or GPU resource.
+
+The pool APIs intentionally remain unsynchronized because `get()` and
+`get_mut()` return pointers whose use can outlive a method-level lock. Safe
+concurrent pools require a separate copy- or closure-based access API.
+
 ## Vulkan integration
 
 [`antono2.vkmemalloc`](https://github.com/antono2/vulkan_memory_allocator) is a
@@ -290,6 +331,7 @@ v run examples/range_allocator
 v run examples/linear_allocator
 v run examples/ring_allocator
 v run examples/buddy_allocator
+v run examples/concurrent_allocators
 ```
 
 When working from a source checkout rather than an installed V module, run
@@ -318,15 +360,21 @@ on the same machine, toolchain, and trace version.
 ```sh
 v fmt -verify .
 v vet .
-v test .
+./scripts/run_tests.sh
 ./scripts/run_examples.sh
 ./scripts/run_benchmarks.sh --quick
 ./scripts/run_sanitizers.sh
+./scripts/run_thread_sanitizer.sh
 ```
 
 The sanitizer gate requires Clang. It checks allocator tests for invalid memory
 accesses and undefined behavior; leak detection is disabled because V and its
 runtime retain process-lifetime bookkeeping allocations.
+ThreadSanitizer separately checks the concurrent allocator contention tests for
+data races and unjoined worker threads. That focused gate uses `-gc none`
+because V 0.5.2's default Boehm GC signal handler conflicts with
+ThreadSanitizer; the allocator wrappers themselves do not depend on a garbage
+collector.
 
 ## Roadmap
 
