@@ -64,7 +64,7 @@ jobs:
           v run examples/linear_allocator
           v run examples/ring_allocator
           v run examples/buddy_allocator
-          v run examples/concurrent_allocators
+          v run examples/synchronized_allocators
 
   sanitizers:
     name: Sanitizers / Linux
@@ -76,5 +76,5 @@ jobs:
           version: 0.5.2
       - name: Run AddressSanitizer and UndefinedBehaviorSanitizer
         run: ./scripts/run_sanitizers.sh
-      - name: Run ThreadSanitizer on concurrent allocators
+      - name: Run ThreadSanitizer on synchronized allocators
         run: ./scripts/run_thread_sanitizer.sh
