@@ -1,3 +1,5 @@
+// Checks FIFO retirement, wrap padding, fragmentation, and stale-record rejection.
+// Compares allocation traces with an independent FIFO model.
 module memory
 
 fn test_ring_allocator_aligns_and_accounts_for_padding() {

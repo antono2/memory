@@ -1,3 +1,5 @@
+// Demonstrates aligned vertex and index ranges within a caller-owned byte array.
+// Writes through a returned offset and checks coalescing after release.
 module main
 
 import antono2.memory

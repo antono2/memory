@@ -1,3 +1,5 @@
+// Demonstrates reusing byte buffers through an object-pool reset callback.
+// Clears the released buffer while retaining its capacity for the next lease.
 module main
 
 import antono2.memory

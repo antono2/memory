@@ -1,3 +1,5 @@
+// Reuses lazily created values through factory and reset callbacks.
+// Leases use checked slot handles; callers manage resource cleanup and synchronization.
 module memory
 
 // ObjectFactory creates one value when an ObjectPool has no reusable value

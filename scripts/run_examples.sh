@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Runs every public-import example against this checkout.
+# Uses temporary module links so examples do not resolve an older installed version.
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)

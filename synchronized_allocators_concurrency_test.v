@@ -1,3 +1,5 @@
+// Exercises shared range and buddy allocators with concurrent workers.
+// Checks distinct live regions and bookkeeping after churn; also used by ThreadSanitizer.
 module memory
 
 const synchronized_worker_count = 8

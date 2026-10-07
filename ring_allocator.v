@@ -1,3 +1,5 @@
+// Allocates contiguous offsets in a circular, caller-owned resource.
+// Tracks alignment and wrap padding until allocations are retired in FIFO order.
 module memory
 
 struct RingRecord {

@@ -1,3 +1,5 @@
+// Demonstrates sharing range-allocation metadata across worker threads.
+// Also checks synchronized buddy allocation and coalescing; no GPU is required.
 import antono2.memory
 
 const workers = 4

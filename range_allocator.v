@@ -1,3 +1,5 @@
+// First-fit allocation of aligned offsets within a caller-owned resource.
+// Released ranges coalesce; this allocator manages metadata, not backing memory.
 module memory
 
 struct FreeRange {

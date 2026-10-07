@@ -1,3 +1,5 @@
+// Fixed-capacity storage with owner- and generation-checked handles.
+// Slot pointers remain usable only until release or clear; shared use needs external synchronization.
 module memory
 
 // Handle identifies one occupied slot at a specific generation.

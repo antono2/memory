@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Runs optimized allocator benchmarks using a temporary module path.
+# Accepts an operation count or --quick for the shorter CI workload.
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)

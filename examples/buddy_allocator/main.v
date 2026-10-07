@@ -1,3 +1,5 @@
+// Demonstrates aligned buddy allocations and payload-versus-block accounting.
+// Releases both allocations and checks that the free blocks coalesce.
 module main
 
 import antono2.memory

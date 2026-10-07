@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Runs allocator tests with AddressSanitizer and UndefinedBehaviorSanitizer.
+# Uses Clang by default; V_SANITIZER_CC can select another compatible compiler.
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)

@@ -1,3 +1,5 @@
+// Demonstrates lazily creating and reusing actors with a reset callback.
+// Uses checked handles to mutate a leased actor and inspect its reset state after reuse.
 module main
 
 import antono2.memory

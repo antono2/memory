@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Runs the synchronized allocator concurrency tests with ThreadSanitizer.
+# Disables the GC for this focused check and uses Clang unless V_SANITIZER_CC is set.
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)

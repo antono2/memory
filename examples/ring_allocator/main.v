@@ -1,3 +1,5 @@
+// Demonstrates a streaming buffer that wraps while keeping each payload contiguous.
+// Retires older allocations first and shows that out-of-order release is rejected.
 module main
 
 import antono2.memory

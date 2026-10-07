@@ -1,3 +1,5 @@
+// Checks power-of-two sizing, alignment, coalescing, and allocation validation.
+// Compares allocation traces with an independent block model.
 module memory
 
 fn test_buddy_allocator_validates_configuration() {

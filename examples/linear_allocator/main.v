@@ -1,3 +1,5 @@
+// Demonstrates per-frame allocations within a caller-owned byte array.
+// Resets the arena between frames and checks that earlier allocation records expire.
 module main
 
 import antono2.memory
