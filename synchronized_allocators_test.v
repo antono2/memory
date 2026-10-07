@@ -1,3 +1,5 @@
+// Checks synchronized wrappers against the plain allocators using matching traces.
+// Covers public queries and reset invalidation; threaded contention is tested separately.
 module memory
 
 fn test_synchronized_range_allocator_exposes_root_api() {

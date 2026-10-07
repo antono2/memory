@@ -1,3 +1,5 @@
+// Bump allocation of aligned offsets for data that shares one lifetime.
+// Reset invalidates all allocations together; backing storage remains caller-owned.
 module memory
 
 // LinearAllocation identifies one aligned range from a LinearAllocator. It is

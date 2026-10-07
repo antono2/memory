@@ -1,3 +1,5 @@
+// Checks slot reuse, pointer access, and rejection of stale or foreign handles.
+// Includes generation wraparound and deterministic insertion/release stress.
 module memory
 
 struct TestItem {

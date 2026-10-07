@@ -1,3 +1,5 @@
+// Checks object-pool prewarming, lazy creation, reset callbacks, and reuse.
+// Exercises checked handles and repeated acquire/release lifecycles.
 module memory
 
 struct ReusableItem {

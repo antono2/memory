@@ -1,3 +1,5 @@
+// Checks first-fit placement, arbitrary alignment, coalescing, and ownership tokens.
+// Compares allocation traces with an independent bitmap model.
 module memory
 
 fn test_range_allocator_aligns_tracks_and_coalesces() {

@@ -1,3 +1,5 @@
+// Subdivides a caller-owned range into power-of-two blocks and coalesces releases.
+// Tracks requested payload separately from reserved block space to expose fragmentation.
 module memory
 
 const buddy_node_free = u8(0)

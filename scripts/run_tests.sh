@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Runs allocator tests against this checkout using an isolated V module path.
+# Removes the temporary module links on exit without changing installed modules.
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
