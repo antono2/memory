@@ -1,4 +1,4 @@
-// Shared alignment arithmetic for the range, linear, ring, and buddy allocators.
+// Shared alignment arithmetic for the range, linear, ring and buddy allocators.
 // Returns no offset when rounding would overflow; callers reject zero alignment.
 module memory
 

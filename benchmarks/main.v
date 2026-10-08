@@ -1,4 +1,4 @@
-// Benchmarks pool reuse, allocator traces, and synchronized contention.
+// Benchmarks pool reuse, allocator traces and synchronized contention.
 // Checks trace equivalence and accounting; timings are diagnostic, not pass/fail thresholds.
 module main
 

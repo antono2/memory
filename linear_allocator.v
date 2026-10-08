@@ -17,7 +17,7 @@ pub fn (allocation LinearAllocation) end() u64 {
 	return allocation.offset + allocation.size
 }
 
-// LinearStats is a snapshot of cursor, payload, padding, and peak usage.
+// LinearStats is a snapshot of cursor, payload, padding and peak usage.
 pub struct LinearStats {
 pub:
 	capacity         u64
@@ -32,7 +32,7 @@ pub:
 // LinearAllocator performs O(1) aligned bump allocation in a fixed-size range.
 //
 // It owns no backing memory and does not support individual release. reset()
-// frees every range at once, making it suitable for frame, request, parser, and
+// frees every range at once, making it suitable for frame, request, parser and
 // other phase-scoped temporary data. The allocator is not synchronized.
 pub struct LinearAllocator {
 	capacity_ u64

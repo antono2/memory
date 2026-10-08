@@ -25,7 +25,7 @@ pub fn (allocation RingAllocation) end() u64 {
 	return allocation.offset + allocation.size
 }
 
-// RingStats describes active payload, alignment/wrap padding, and peak use.
+// RingStats describes active payload, alignment/wrap padding and peak use.
 pub struct RingStats {
 pub:
 	capacity                u64
@@ -42,7 +42,7 @@ pub:
 //
 // Payloads never cross the end of the backing range. When allocation wraps,
 // the unused suffix is tracked as padding and reclaimed with the allocation.
-// This is suitable for staging buffers, streaming data, and resources retired
+// This is suitable for staging buffers, streaming data and resources retired
 // in submission order. The allocator is not internally synchronized.
 pub struct RingAllocator {
 	capacity_ u64
@@ -185,7 +185,7 @@ pub fn (mut allocator RingAllocator) reset() {
 	allocator.first_record = 0
 }
 
-// stats returns current FIFO occupancy, padding, and peak use.
+// stats returns current FIFO occupancy, padding and peak use.
 pub fn (allocator &RingAllocator) stats() RingStats {
 	return RingStats{
 		capacity:                allocator.capacity_

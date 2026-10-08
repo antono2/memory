@@ -1,4 +1,4 @@
-// Checks first-fit placement, arbitrary alignment, coalescing, and ownership tokens.
+// Checks first-fit placement, arbitrary alignment, coalescing and ownership tokens.
 // Compares allocation traces with an independent bitmap model.
 module memory
 

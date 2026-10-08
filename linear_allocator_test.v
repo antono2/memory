@@ -1,5 +1,5 @@
-// Checks bump allocation, padding, overflow, and reset invalidation.
-// Exercises foreign records, generation wraparound, and deterministic stress.
+// Checks bump allocation, padding, overflow and reset invalidation.
+// Exercises foreign records, generation wraparound and deterministic stress.
 module memory
 
 fn test_linear_allocator_aligns_and_accounts_for_padding() {

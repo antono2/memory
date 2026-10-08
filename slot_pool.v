@@ -5,7 +5,7 @@ module memory
 // Handle identifies one occupied slot at a specific generation.
 //
 // Handles are intentionally opaque. Keep the complete value returned by
-// insert() and pass it back to contains(), get(), get_mut(), or release().
+// insert() and pass it back to contains(), get(), get_mut() or release().
 pub struct Handle {
 	index      int
 	generation u32
@@ -98,7 +98,7 @@ pub fn (pool &SlotPool[T]) contains(handle Handle) bool {
 }
 
 // get returns a pointer to the value identified by handle, or none when the
-// handle is stale, forged, foreign, or already released. Do not retain the
+// handle is stale, forged, foreign or already released. Do not retain the
 // pointer after releasing its handle or clearing the pool.
 pub fn (pool &SlotPool[T]) get(handle Handle) ?&T {
 	if !pool.contains(handle) {
@@ -108,7 +108,7 @@ pub fn (pool &SlotPool[T]) get(handle Handle) ?&T {
 }
 
 // get_mut returns a mutable pointer to the value identified by handle, or none
-// when the handle is stale, forged, foreign, or already released. Do not retain
+// when the handle is stale, forged, foreign or already released. Do not retain
 // the pointer after releasing its handle or clearing the pool.
 pub fn (mut pool SlotPool[T]) get_mut(handle Handle) ?&T {
 	if !pool.contains(handle) {
@@ -118,14 +118,14 @@ pub fn (mut pool SlotPool[T]) get_mut(handle Handle) ?&T {
 }
 
 // release returns a slot to the free list. It returns false for a stale,
-// forged, or already released handle and leaves the pool unchanged.
+// forged or already released handle and leaves the pool unchanged.
 pub fn (mut pool SlotPool[T]) release(handle Handle) bool {
 	_ := pool.take(handle) or { return false }
 	return true
 }
 
 // take removes and returns the value identified by handle. It returns none for
-// a stale, forged, foreign, or already released handle.
+// a stale, forged, foreign or already released handle.
 pub fn (mut pool SlotPool[T]) take(handle Handle) ?T {
 	if !pool.contains(handle) {
 		return none

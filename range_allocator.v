@@ -43,7 +43,7 @@ pub:
 // RangeAllocator manages aligned offsets inside one fixed-size resource.
 //
 // It owns no memory itself. The offsets can refer to bytes in a host buffer,
-// mapped file, shared-memory object, GPU buffer, or Vulkan device-memory block.
+// mapped file, shared-memory object, GPU buffer or Vulkan device-memory block.
 // Allocation uses deterministic first fit; release reinserts and coalesces the
 // returned range. The allocator is not internally synchronized.
 pub struct RangeAllocator {
@@ -137,7 +137,7 @@ pub fn (allocator &RangeAllocator) contains(allocation RangeAllocation) bool {
 }
 
 // release returns a live allocation to the free-range set. It returns false for
-// stale, forged, foreign, or already released allocations.
+// stale, forged, foreign or already released allocations.
 pub fn (mut allocator RangeAllocator) release(allocation RangeAllocation) bool {
 	if !allocator.contains(allocation) {
 		return false
@@ -164,7 +164,7 @@ pub fn (mut allocator RangeAllocator) reset() {
 	allocator.used = 0
 }
 
-// stats returns current capacity, occupancy, and free-range information.
+// stats returns current capacity, occupancy and free-range information.
 pub fn (allocator &RangeAllocator) stats() RangeStats {
 	mut largest := u64(0)
 	for free_range in allocator.free_ranges {

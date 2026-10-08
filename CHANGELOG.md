@@ -9,15 +9,15 @@ All notable changes to this project will be documented in this file.
 - Add independent block and FIFO reference models for buddy and ring allocation,
   including 20,000-operation deterministic comparison traces.
 - Prove synchronized range and buddy allocators match their plain counterparts
-  across deterministic success, failure, offset, and statistics traces.
-- Cover zero-capacity state, failed-allocation atomicity, and allocation-ID
+  across deterministic success, failure, offset and statistics traces.
+- Cover zero-capacity state, failed-allocation atomicity and allocation-ID
   wraparound without reusing zero or a live identifier.
-- Expand benchmark suite v3 with synchronized-wrapper comparisons and 1, 2, 4,
+- Expand benchmark suite v3 with synchronized-wrapper comparisons and 1, 2, 4
   and 8-worker contention workloads.
 - Store benchmark smoke results as CI artifacts and record optimized Linux,
-  macOS, and Windows baseline artifacts for release tags.
+  macOS and Windows baseline artifacts for release tags.
 - Document the stable 1.x API surface, ownership-token boundaries, supported V
-  compiler, algorithmic complexity, and synchronization guarantees.
+  compiler, algorithmic complexity and synchronization guarantees.
 - Validate root-module API documentation generation in CI.
 
 ## 1.3.1 - 2026-09-12
@@ -45,26 +45,26 @@ All notable changes to this project will be documented in this file.
 - Add a reproducible Clang AddressSanitizer and UndefinedBehaviorSanitizer test
   gate for the allocator suite.
 - Add an optional `antono2.memory.concurrent` submodule with synchronized range
-  and buddy allocators, multithreaded contention coverage, a runnable example,
+  and buddy allocators, multithreaded contention coverage, a runnable example
   and a ThreadSanitizer gate.
 
 ## 1.1.0 - 2026-09-11
 
-- Restore `antono2.memory` as the canonical module, import, repository, and
+- Restore `antono2.memory` as the canonical module, import, repository and
   installed-directory identity.
 - Add a deterministic power-of-two `BuddyAllocator` with checked allocation
-  records, recursive coalescing, occupancy statistics, tests, and an example.
+  records, recursive coalescing, occupancy statistics, tests and an example.
 - Add an independent bitmap-model stress test for deterministic first-fit range
   allocation under fragmentation.
 - Add deterministic object-pool lifecycle stress coverage.
 - Add reproducible optimized churn benchmarks for every allocation strategy,
   including fragmentation and occupancy diagnostics.
 - Replay an identical bounded allocation trace for first-fit and buddy benchmark
-  comparisons, with success, failure, peak-use, and trace-integrity diagnostics.
+  comparisons, with success, failure, peak-use and trace-integrity diagnostics.
 - Run the allocator test suite and canonical `antono2.memory` public-import
-  examples on Linux, macOS, and Windows in CI.
+  examples on Linux, macOS and Windows in CI.
 - Add a task-oriented allocator selection guide covering lifetime, release
-  order, and fragmentation tradeoffs.
+  order and fragmentation tradeoffs.
 
 ## 1.0.3 - 2026-09-10
 
@@ -99,13 +99,13 @@ All notable changes to this project will be documented in this file.
 - Convert the actor demonstration into the importable `generic_pool`
   module.
 - Add the fixed-capacity, generation-checked `SlotPool[T]`.
-- Add a bounded `ObjectPool[T]` with lazy creation, prewarming, reset callbacks,
+- Add a bounded `ObjectPool[T]` with lazy creation, prewarming, reset callbacks
   and bulk release.
 - Add an aligned, coalescing `RangeAllocator` for suballocating offsets in host
-  buffers, mapped files, shared memory, and GPU memory blocks.
+  buffers, mapped files, shared memory and GPU memory blocks.
 - Add an O(1) aligned `LinearAllocator` for frame- and phase-scoped temporary
-  ranges, including payload, padding, remaining, and peak-use statistics.
+  ranges, including payload, padding, remaining and peak-use statistics.
 - Add a FIFO `RingAllocator` for staging buffers and streaming allocations,
-  including aligned wraparound, checked releases, and occupancy statistics.
+  including aligned wraparound, checked releases and occupancy statistics.
 - Move the actor demonstration to `examples/object_pool`.
-- Add automated formatting, vetting, tests, and example execution.
+- Add automated formatting, vetting, tests and example execution.
