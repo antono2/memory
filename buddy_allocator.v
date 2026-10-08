@@ -40,7 +40,7 @@ pub fn (allocation BuddyAllocation) block_end() u64 {
 	return allocation.offset + allocation.block_size
 }
 
-// BuddyStats describes payload, reserved space, internal fragmentation, and
+// BuddyStats describes payload, reserved space, internal fragmentation and
 // the largest block that can currently be allocated without releasing memory.
 pub struct BuddyStats {
 pub:
@@ -57,7 +57,7 @@ pub:
 // BuddyAllocator manages a power-of-two arena as a binary tree of blocks.
 //
 // Requests are rounded up to the smallest block that satisfies size,
-// alignment, and minimum_block_size. Both capacity and minimum_block_size must
+// alignment and minimum_block_size. Both capacity and minimum_block_size must
 // be powers of two, and requested alignments must also be powers of two.
 // Allocation searches deterministically from lower to higher offsets. Release
 // coalesces free buddies while walking back to the root. The allocator owns no
@@ -185,7 +185,7 @@ pub fn (allocator &BuddyAllocator) contains(allocation BuddyAllocation) bool {
 }
 
 // release returns a live allocation and coalesces every completely free pair
-// of buddy blocks. Invalid, foreign, forged, and stale allocations are rejected.
+// of buddy blocks. Invalid, foreign, forged and stale allocations are rejected.
 pub fn (mut allocator BuddyAllocator) release(allocation BuddyAllocation) bool {
 	if !allocator.contains(allocation) {
 		return false

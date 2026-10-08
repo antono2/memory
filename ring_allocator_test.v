@@ -1,4 +1,4 @@
-// Checks FIFO retirement, wrap padding, fragmentation, and stale-record rejection.
+// Checks FIFO retirement, wrap padding, fragmentation and stale-record rejection.
 // Compares allocation traces with an independent FIFO model.
 module memory
 

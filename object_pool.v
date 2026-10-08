@@ -130,7 +130,7 @@ pub fn (pool &ObjectPool[T]) handles() []Handle {
 }
 
 // release resets an acquired value and makes it available for reuse. It
-// returns false for stale, forged, foreign, or already released handles.
+// returns false for stale, forged, foreign or already released handles.
 pub fn (mut pool ObjectPool[T]) release(handle Handle) bool {
 	mut value := pool.leases.take(handle) or { return false }
 	value = pool.reset(value)

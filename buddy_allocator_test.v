@@ -1,4 +1,4 @@
-// Checks power-of-two sizing, alignment, coalescing, and allocation validation.
+// Checks power-of-two sizing, alignment, coalescing and allocation validation.
 // Compares allocation traces with an independent block model.
 module memory
 
