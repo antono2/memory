@@ -412,3 +412,9 @@ collector.
 ## License
 
 This project is available under the [MIT License](LICENSE).
+
+
+## Compatibility and diagnostics
+
+See [tested profiles and read-only diagnostics](docs/compatibility.md) for
+compiler/dependency versions, setup recovery actions and upgrade checks.

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "v_release": "0.5.2",
+  "modules": {},
+  "build_tools": [
+    "git"
+  ]
+}
