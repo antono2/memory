@@ -26,9 +26,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: modules/antono2/memory
+      - name: Validate and resolve tested compatibility
+        id: compat
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: |
+          python modules/antono2/memory/scripts/test_compatibility.py
+          python modules/antono2/memory/scripts/test_doctor.py
+          python modules/antono2/memory/scripts/compatibility.py --github-output "$GITHUB_OUTPUT"
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
-          version: 0.5.2
+          version: ${{ steps.compat.outputs.v_release }}
       - name: Record optimized benchmark baseline
         run: |
           v -prod run benchmarks 250000 \
