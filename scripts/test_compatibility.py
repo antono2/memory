@@ -34,6 +34,19 @@ class CompatibilityChecks(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'disagree'):
                 resolve(root)
 
+    def test_missing_v3_profile_has_actionable_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'v.mod').write_text('Module {}')
+            pins = {'schema_version': 1, 'v_release': '0.5.2', 'modules': {}}
+            (root / 'compatibility.json').write_text(json.dumps(pins))
+            with self.assertRaisesRegex(ValueError, 'V3 profile is not configured'):
+                resolve(root, 'v3')
+            pins['v3_v'] = 'a' * 40
+            (root / 'compatibility.json').write_text(json.dumps(pins))
+            with self.assertRaisesRegex(ValueError, 'v3_vc'):
+                resolve(root, 'v3')
+
 
 if __name__ == '__main__':
     unittest.main()

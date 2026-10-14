@@ -15,4 +15,5 @@ fi
 mkdir -p "$modules_dir/antono2"
 ln -s "$repo_dir" "$modules_dir/antono2/memory"
 
-VMODULES="$modules_dir" v -prod run "$repo_dir/benchmarks" "$operations"
+"${VEXE:-v}" version
+VMODULES="$modules_dir" "${VEXE:-v}" -prod run "$repo_dir/benchmarks" "$operations"

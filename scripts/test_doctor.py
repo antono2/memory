@@ -51,6 +51,16 @@ class DoctorChecks(unittest.TestCase):
             self.assertEqual(next(item for item in v3['checks'] if item['name'] == 'V compiler')['status'], 'pass')
             self.assertEqual(next(item for item in unsupported['checks'] if item['name'] == 'V compiler')['status'], 'fail')
 
+    def test_missing_v3_does_not_fall_back_to_another_compiler(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.fixture(root)
+            with patch('doctor.shutil.which', return_value='git'), patch('doctor.probe', return_value=(True, 'V aaaaaaa')):
+                report = diagnose(root, compiler='fixture-v', profile='v3')
+            check = next(item for item in report['checks'] if item['name'] == 'V compiler')
+            self.assertEqual(check['status'], 'fail')
+            self.assertIn('Configure', check['action'])
+
 
 if __name__ == '__main__':
     unittest.main()

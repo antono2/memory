@@ -1,3 +1,5 @@
 /generic_pool
 /*_test
 **/.*.v3cc.*/
+__pycache__/
+.ci-v-source/

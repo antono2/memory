@@ -145,16 +145,25 @@ pub fn (mut pool SlotPool[T]) take(handle Handle) ?T {
 // the internal slot order and must not be used as a stable sorting guarantee.
 pub fn (pool &SlotPool[T]) handles() []Handle {
 	mut handles := []Handle{cap: pool.used}
+	pool.handles_into(mut handles)
+	return handles
+}
+
+// handles_into replaces destination with a snapshot of the live handles. It
+// retains destination capacity, growing only when that capacity is insufficient.
+// Handles follow the same traversal order as handles(), without a stable sorting
+// guarantee. The snapshot does not extend slot lifetimes or synchronize access.
+pub fn (pool &SlotPool[T]) handles_into(mut destination []Handle) {
+	destination.clear()
 	for index, slot in pool.slots {
 		if slot.occupied {
-			handles << Handle{
+			destination << Handle{
 				index:      index
 				generation: slot.generation
 				owner:      pool
 			}
 		}
 	}
-	return handles
 }
 
 // clear releases every occupied slot and invalidates all of its active handles

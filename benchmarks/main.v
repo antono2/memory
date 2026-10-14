@@ -518,7 +518,22 @@ fn main() {
 		eprintln('operation count must be greater than zero')
 		exit(2)
 	}
-	println('allocator benchmark: operations=${operations}, suite=v3, trace=v2')
+	println('allocator benchmark: operations=${operations}, suite=v4, trace=v2')
+	fresh := benchmark_workspaces(operations, 'fresh')
+	print_result(fresh)
+	for mode in ['retained', 'pooled'] {
+		result := benchmark_workspaces(operations, mode)
+		if result.checksum != fresh.checksum || result.trace_hash != fresh.trace_hash {
+			panic('workspace results diverged')
+		}
+		print_result(result)
+	}
+	snapshots := benchmark_handle_snapshots(operations, false)
+	reused_snapshots := benchmark_handle_snapshots(operations, true)
+	if snapshots.checksum != reused_snapshots.checksum { panic('handle snapshots diverged') }
+	print_result(snapshots)
+	print_result(reused_snapshots)
+	print_result(benchmark_retirement(operations))
 	print_result(benchmark_slot_pool(operations))
 	print_result(benchmark_object_pool(operations))
 	range_result := benchmark_range_allocator(operations)

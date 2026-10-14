@@ -22,7 +22,7 @@ export ASAN_OPTIONS UBSAN_OPTIONS
 mkdir -p "$modules_dir/antono2"
 ln -s "$repo_dir" "$modules_dir/antono2/memory"
 
-VMODULES="$modules_dir" v -cc "$sanitizer_compiler" \
+VMODULES="$modules_dir" "${VEXE:-v}" -cc "$sanitizer_compiler" \
 	-cflags -fsanitize=address,undefined \
 	-cflags -fno-omit-frame-pointer \
 	-ldflags -fsanitize=address,undefined \

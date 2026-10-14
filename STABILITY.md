@@ -32,8 +32,8 @@ guarantee a later allocation.
 
 ## Threading
 
-`SlotPool`, `ObjectPool`, `RangeAllocator`, `LinearAllocator`, `RingAllocator`
-and `BuddyAllocator` require external synchronization when shared between
+`SlotPool`, `ObjectPool`, `RangeAllocator`, `LinearAllocator`, `RingAllocator`,
+`BuddyAllocator` and `RetirementQueue` require external synchronization when shared between
 threads. `SynchronizedRangeAllocator` and `SynchronizedBuddyAllocator` protect
 their allocation metadata with reader/writer mutexes.
 
@@ -51,3 +51,22 @@ The minimum tested compiler for v1.4.x is V 0.5.2. Every release is tested on
 Linux, macOS and Windows with that compiler. V itself is evolving, so support
 for later compiler releases is verified and adjusted in subsequent package
 releases rather than assumed.
+
+The additive workspace and retirement APIs also have a pinned Linux current-V
+profile in `compatibility.json`, exercised in ordinary and explicit
+`-new-compiler` modes. This does not change the minimum compiler or imply native
+V3 runtime coverage on Windows or macOS. See [validation](docs/validation.md).
+
+## Workspace and completion ownership
+
+`handles_into()` returns the same kind of handle snapshot as `handles()` using
+caller-owned output storage. Reusing output capacity does not extend a lease.
+Workspace references and slices must stop being used before release or reset;
+copied arrays may allocate according to V's value semantics.
+
+`RetirementQueue` adds bounded bookkeeping for a single caller-owned completion
+domain. Its token ordering, failure atomicity and FIFO readiness are part of the
+stable root API. Completion evidence, unique resource ownership, cleanup and
+shutdown remain with the caller. Token ordering belongs to that domain and must
+not silently wrap. There is no reset that bypasses pending work.
+See [workspace lifetimes](docs/workspaces.md) and [retirement](docs/retirement.md).

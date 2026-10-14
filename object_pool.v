@@ -129,6 +129,13 @@ pub fn (pool &ObjectPool[T]) handles() []Handle {
 	return pool.leases.handles()
 }
 
+// handles_into replaces destination with the current lease handles, retaining
+// its capacity. It grows only when necessary and has the same snapshot and
+// lifetime rules as handles(). Shared use requires external synchronization.
+pub fn (pool &ObjectPool[T]) handles_into(mut destination []Handle) {
+	pool.leases.handles_into(mut destination)
+}
+
 // release resets an acquired value and makes it available for reuse. It
 // returns false for stale, forged, foreign or already released handles.
 pub fn (mut pool ObjectPool[T]) release(handle Handle) bool {
