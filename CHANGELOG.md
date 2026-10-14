@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
   consumer builds and actionable diagnostics for missing compiler profiles.
 - Document workspace bounds, borrowing, completion domains and shutdown from
   the application viewpoint.
+- Include compiler, commit and platform metadata in release benchmark reports,
+  and use artifact names that also support manual runs on feature branches.
 
 ## 1.4.0 - 2026-09-12
 

@@ -39,12 +39,15 @@ jobs:
           version: ${{ steps.compat.outputs.v_release }}
       - name: Record optimized benchmark baseline
         run: |
-          v -prod run benchmarks 250000 \
-            | tee benchmark-results-${{ runner.os }}.txt
+          {
+            printf 'ref=%s commit=%s platform=%s/%s build=-prod\n' \
+              "$GITHUB_REF_NAME" "$GITHUB_SHA" "$RUNNER_OS" "$RUNNER_ARCH"
+            ./scripts/run_benchmarks.sh 250000
+          } | tee benchmark-results-${{ runner.os }}.txt
       - name: Upload benchmark baseline
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: memory-${{ github.ref_name }}-${{ runner.os }}
+          name: memory-${{ github.run_id }}-${{ runner.os }}
           path: modules/antono2/memory/benchmark-results-${{ runner.os }}.txt
           if-no-files-found: error
           retention-days: 90
