@@ -6,18 +6,26 @@ import antono2.memory
 
 struct Buffer {
 mut:
+	storage &BufferStorage = &BufferStorage{}
+}
+
+struct BufferStorage {
+mut:
 	data []u8
 }
 
 fn make_buffer() Buffer {
 	return Buffer{
-		data: []u8{cap: 4096}
+		storage: &BufferStorage{
+			data: []u8{cap: 4096}
+		}
 	}
 }
 
 fn reset_buffer(buffer Buffer) Buffer {
 	mut reset := buffer
-	reset.data.clear()
+	// The released lease exclusively owns this referenced storage.
+	unsafe { reset.storage.data.clear() }
 	return reset
 }
 
@@ -28,12 +36,12 @@ fn main() {
 
 	handle := buffers.acquire() or { panic(err) }
 	mut buffer := buffers.get_mut(handle) or { panic('stale buffer handle') }
-	buffer.data << [u8(1), 2, 3]
+	buffer.storage.data << [u8(1), 2, 3]
 	released := buffers.release(handle)
 	assert released
 
 	reused := buffers.acquire() or { panic(err) }
 	reused_buffer := buffers.get(reused) or { panic('stale buffer handle') }
-	assert reused_buffer.data.len == 0
-	println('reused buffer capacity: ${reused_buffer.data.cap}')
+	assert reused_buffer.storage.data.len == 0
+	println('reused buffer capacity: ${reused_buffer.storage.data.cap}')
 }

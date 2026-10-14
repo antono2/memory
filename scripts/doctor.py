@@ -40,10 +40,12 @@ def diagnose(root, compiler=None, modules=None, sdk=None, runtime=False, profile
     if compiler:
         passed, detail = probe([compiler, '-version'])
         selected = pins.get('v_release', '') if profile == 'release' else (
-            pins.get('v3_v', pins.get('v', '')) if profile == 'v3' else pins.get('v', ''))
+            pins.get('v3_v', '') if profile == 'v3' else pins.get('v', ''))
         expected = selected[:7] if selected else (pins.get('v_release', '') if profile == 'stable' else '')
         matches = passed and bool(expected) and expected in detail
-        check('V compiler', matches, detail, 'Select the tested V compiler from compatibility.json or rerun the setup helper.')
+        action = ('Configure the requested compiler profile in compatibility.json.' if not expected else
+                  'Select the tested V compiler from compatibility.json; pass --v with its executable path.')
+        check('V compiler', matches, detail, action)
     else:
         check('V compiler', False, 'No V compiler found', 'Run the project setup helper, or pass --v with the tested compiler path.')
     modules = modules or os.environ.get('VMODULES')

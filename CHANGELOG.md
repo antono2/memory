@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.5.0 - 2026-10-14
+
+- Add caller-owned `handles_into()` snapshots to slot and object pools, retaining
+  destination storage across enumeration.
+- Add a fixed-capacity `RetirementQueue[T]` with monotonic completion frontiers,
+  FIFO ready retrieval and explicit resource ownership rules.
+- Add bounded workspace, streaming-retirement and out-of-order job examples,
+  including backing-storage reuse, error-path and reference-model tests.
+- Correct the retained-buffer recipe to pool heap references rather than copy
+  nested arrays through a by-value reset callback.
+- Extend deterministic benchmark suite v4 with equivalent fresh/retained/pooled
+  workloads, handle snapshots and delayed completion/backpressure.
+- Add pinned ordinary/current-V and strict V3 validation on Linux, repeated public
+  consumer builds and actionable diagnostics for missing compiler profiles.
+- Document workspace bounds, borrowing, completion domains and shutdown from
+  the application viewpoint.
+- Include compiler, commit and platform metadata in release benchmark reports,
+  and use artifact names that also support manual runs on feature branches.
+
 ## 1.4.0 - 2026-09-12
 
 - Add independent block and FIFO reference models for buddy and ring allocation,

@@ -8,7 +8,8 @@ objects and managing bounded memory and resource ranges in V.
 The library includes checked slot and object pools plus range, linear and ring
 allocators, along with a power-of-two buddy allocator for specialized arenas.
 Explicitly named synchronized range and buddy variants are available from the
-same root import. Each implementation is dependency-free and accompanied by a
+same root import. A bounded retirement queue holds resources until caller-reported
+completion. Each implementation is dependency-free and accompanied by a
 directly runnable example. Optional Vulkan suballocation examples can build on
 the same core without making the general-purpose module Vulkan-specific.
 The allocator test suite and public-import examples run on Linux, macOS and
@@ -53,6 +54,7 @@ threading, ownership-token and compiler-support guarantees.
 | --- | --- | --- | --- |
 | `SlotPool[T]` | You need a fixed number of typed values with stable, checked handles | Any order | Capacity is fixed at construction |
 | `ObjectPool[T]` | Creating a typed resource is expensive and released values can be reset and reused | Any order | A reset callback must restore reusable state |
+| `RetirementQueue[T]` | Resources must wait for an ordered completion frontier before reuse | FIFO ready values | Caller supplies completion evidence and disposal |
 | `RangeAllocator` | Requests have arbitrary sizes or non-power-of-two alignments | Any order | First-fit allocation and release scan free ranges |
 | `LinearAllocator` | A whole batch shares one lifetime, such as frame or request scratch data | All at once with `reset()` | Individual ranges cannot be released |
 | `RingAllocator` | Allocations are retired in the same order they are created | FIFO | Out-of-order release is rejected |
@@ -73,6 +75,7 @@ when allocator metadata is shared between threads.
 | --- | --- | --- | --- |
 | `SlotPool[T]` | O(1) | O(1) release; O(capacity) clear | O(1) lookup; external synchronization required |
 | `ObjectPool[T]` | O(1) plus factory | O(1) plus reset callback; O(capacity) release-all | External synchronization required |
+| `RetirementQueue[T]` | O(1) enqueue | O(1) completion report and ready retrieval | Fixed bookkeeping capacity; external synchronization required |
 | `RangeAllocator` | O(free ranges) | O(free ranges) | Statistics scan free ranges; external synchronization required |
 | `LinearAllocator` | O(1) | O(1) whole-arena reset | O(1) queries; external synchronization required |
 | `RingAllocator` | O(1) | Amortized O(1) FIFO release | `contains` scans live records; external synchronization required |
@@ -359,6 +362,14 @@ When working from a source checkout rather than an installed V module, run
 `./scripts/run_examples.sh`; the script creates an isolated module path and does
 not modify the user's installed modules.
 
+## Reusable workspaces and deferred retirement
+
+The [workspace guide](docs/workspaces.md) explains retained versus pooled
+workspaces, V value-copying behavior, bounded requests and borrowed results.
+The [retirement guide](docs/retirement.md) covers completion tokens, out-of-order
+jobs, streaming backpressure and shutdown. Run `examples/workspaces`,
+`examples/deferred_ring` and `examples/deferred_jobs` through the example runner.
+
 ## Benchmarks
 
 Run the deterministic churn workloads with production compiler optimizations:
@@ -374,6 +385,10 @@ streaming, synchronized-wrapper overhead and synchronized range and buddy
 contention with 1, 2, 4 and 8 workers. Plain and synchronized allocators replay
 the same bounded request and release trace, verified by trace hashes and result
 checksums.
+Suite v4 also compares fresh, retained and pooled byte workspaces, fresh versus
+caller-buffer handle snapshots, and delayed retirement with bounded backpressure.
+Workspace results include factory calls, buffer changes, logical peak use and
+retained payload capacity; these are not process-wide allocation or RSS counts.
 
 CI stores the quick Linux result as a downloadable text artifact. Each release
 tag also records optimized Linux, macOS and Windows baselines. These results
@@ -391,6 +406,7 @@ v vet .
 ./scripts/run_benchmarks.sh --quick
 ./scripts/run_sanitizers.sh
 ./scripts/run_thread_sanitizer.sh
+VEXE=/path/to/pinned/v ./scripts/run_v3.sh
 ```
 
 The sanitizer gate requires Clang. It checks allocator tests for invalid memory
@@ -403,6 +419,8 @@ ThreadSanitizer; the allocator wrappers themselves do not depend on a garbage
 collector.
 
 ## Roadmap
+
+See [validation and compatibility](docs/validation.md) for the compiler matrix.
 
 - realistic allocation traces collected from downstream integrations
 - specialized allocation policies only when those traces show a measurable need

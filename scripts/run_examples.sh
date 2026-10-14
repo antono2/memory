@@ -10,6 +10,6 @@ trap 'rm -rf "$modules_dir"' EXIT HUP INT TERM
 mkdir -p "$modules_dir/antono2"
 ln -s "$repo_dir" "$modules_dir/antono2/memory"
 
-for example in object_pool buffer_pool range_allocator linear_allocator ring_allocator buddy_allocator synchronized_allocators; do
-	VMODULES="$modules_dir" v run "$repo_dir/examples/$example"
+for example in object_pool buffer_pool range_allocator linear_allocator ring_allocator buddy_allocator synchronized_allocators workspaces deferred_ring deferred_jobs; do
+	VMODULES="$modules_dir" "${VEXE:-v}" run "$repo_dir/examples/$example"
 done

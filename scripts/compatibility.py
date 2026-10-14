@@ -11,6 +11,10 @@ def resolve(root, profile='stable'):
     pins = json.loads((root / 'compatibility.json').read_text())
     if pins.get('schema_version') != 1:
         raise ValueError('Unsupported compatibility schema_version')
+    if profile not in ('stable', 'v3', 'master'):
+        raise ValueError('Unknown compiler profile: ' + profile)
+    if profile == 'v3' and not all(pins.get(key) for key in ('v3_v', 'v3_vc', 'v3_tcc')):
+        raise ValueError('V3 profile is not configured: pin v3_v, v3_vc and v3_tcc in compatibility.json')
     if 'v_release' in pins and not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', pins['v_release']):
         raise ValueError('v_release must be a released compiler version')
     upstream = root / 'third_party/upstream.json'
@@ -30,6 +34,8 @@ def resolve(root, profile='stable'):
             raise ValueError(f'Invalid module pin: {name}={tag}')
         outputs['module_' + name] = tag
     outputs['selected_v'] = 'master' if profile == 'master' else (pins['v3_v'] if profile == 'v3' else pins.get('v', pins.get('v_release', '')))
+    if not outputs['selected_v']:
+        raise ValueError('Stable compiler profile is not configured in compatibility.json')
     for key, value in outputs.items():
         if not re.fullmatch('[a-z0-9_]+', key) or '\n' in value or '\r' in value:
             raise ValueError(f'Unsafe compatibility output: {key}')
