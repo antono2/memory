@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.5.0 - 2026-10-14
+
 - Add caller-owned `handles_into()` snapshots to slot and object pools, retaining
   destination storage across enumeration.
 - Add a fixed-capacity `RetirementQueue[T]` with monotonic completion frontiers,

@@ -47,7 +47,7 @@ mutex would make pointer access thread-safe.
 
 ## Supported compiler
 
-The minimum tested compiler for v1.4.x is V 0.5.2. Every release is tested on
+The minimum tested compiler for v1.x is V 0.5.2. Every release is tested on
 Linux, macOS and Windows with that compiler. V itself is evolving, so support
 for later compiler releases is verified and adjusted in subsequent package
 releases rather than assumed.
