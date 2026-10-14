@@ -5,6 +5,8 @@ The released compiler remains V 0.5.2 on native Linux, macOS and Windows CI.
 current-V validation. The Linux pinned job builds V from those sources, retaining
 the tool fallback required by `v test`, then checks ordinary and explicit
 `-new-compiler` modes. No floating master revision is used for release evidence.
+Keep the compiler checkout outside the module directory: V test discovery also
+walks hidden directories and would otherwise discover the compiler's own suite.
 
 Use an isolated module path so examples cannot resolve an older installed
 `antono2.memory`. The existing runners create temporary nested module links and

@@ -102,8 +102,13 @@ jobs:
   pinned-v3:
     name: Pinned V / ordinary and strict V3 / Linux
     runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: modules/antono2/memory
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: modules/antono2/memory
       - name: Resolve compiler pins
         id: compat
         run: python3 scripts/compatibility.py --profile v3 --github-output "$GITHUB_OUTPUT"
@@ -123,7 +128,7 @@ jobs:
           ref: ${{ steps.compat.outputs.v3_tcc }}
           path: .ci-v-source/thirdparty/tcc
       - name: Build pinned compiler with tool fallback
-        run: make -C .ci-v-source local=1
+        run: make -C "$GITHUB_WORKSPACE/.ci-v-source" local=1
       - name: Verify both compiler modes and public consumers
         env:
           VEXE: ${{ github.workspace }}/.ci-v-source/v
