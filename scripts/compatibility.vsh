@@ -1,6 +1,5 @@
 // Resolve tested compiler and module pins and validate the VPM declarations.
 import flag
-import json
 import os
 import rand
 import x.json2
@@ -194,7 +193,7 @@ fn run_cli() ! {
 	if key != '' {
 		println(outputs[key] or { return error('unknown compatibility output: ${key}') })
 	} else {
-		println(json.encode_pretty(outputs))
+		println(json2.encode(outputs, prettify: true))
 	}
 }
 
