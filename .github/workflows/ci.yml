@@ -137,7 +137,7 @@ jobs:
         env:
           VEXE: ${{ github.workspace }}/.ci-v-source/v
           VJOBS: 4
-        run: sh scripts/run_v3.sh
+        run: v run scripts/run_validation.vsh v3
 
   sanitizers:
     name: Sanitizers / Linux
@@ -160,6 +160,6 @@ jobs:
         with:
           version: ${{ steps.compat.outputs.v_release }}
       - name: Run AddressSanitizer and UndefinedBehaviorSanitizer
-        run: ./scripts/run_sanitizers.sh
+        run: v run scripts/run_validation.vsh sanitizers
       - name: Run ThreadSanitizer on synchronized allocators
-        run: ./scripts/run_thread_sanitizer.sh
+        run: v run scripts/run_validation.vsh thread-sanitizer

@@ -401,12 +401,12 @@ toolchains, operation counts and trace versions.
 ```sh
 v fmt -verify .
 v vet .
-./scripts/run_tests.sh
+v run scripts/run_validation.vsh tests
 v run scripts/run_samples.vsh examples
 v run scripts/run_samples.vsh benchmarks --quick
-./scripts/run_sanitizers.sh
-./scripts/run_thread_sanitizer.sh
-VEXE=/path/to/pinned/v ./scripts/run_v3.sh
+v run scripts/run_validation.vsh sanitizers
+v run scripts/run_validation.vsh thread-sanitizer
+/path/to/pinned/v run scripts/run_validation.vsh v3
 ```
 
 The sanitizer gate requires Clang. It checks allocator tests for invalid memory

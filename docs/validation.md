@@ -11,7 +11,7 @@ walks hidden directories and would otherwise discover the compiler's own suite.
 Use an isolated module path so examples cannot resolve an older installed
 `antono2.memory`. The existing runners create temporary nested module links and
 do not change the global module installation. `VEXE` selects the test/example/
-benchmark compiler; `scripts/run_v3.sh` also verifies its pinned revision.
+benchmark compiler; `v run scripts/run_validation.vsh v3` also verifies its pinned revision.
 
 ```sh
 v run scripts/compatibility.vsh --self-test
@@ -19,16 +19,16 @@ v run scripts/doctor.vsh --self-test
 v fmt -verify .
 v vet .
 v doc -f none -m .
-./scripts/run_tests.sh
+v run scripts/run_validation.vsh tests
 v run scripts/run_samples.vsh examples
 v run scripts/run_samples.vsh benchmarks --quick
-./scripts/run_sanitizers.sh
-./scripts/run_thread_sanitizer.sh
-VEXE=/path/to/pinned/v ./scripts/run_v3.sh
+v run scripts/run_validation.vsh sanitizers
+v run scripts/run_validation.vsh thread-sanitizer
+/path/to/pinned/v run scripts/run_validation.vsh v3
 ```
 
-For a focused test, pass its file or directory to `scripts/run_tests.sh`.
-`run_v3.sh` runs the suite in both modes and compiles/runs each new public-import
+For a focused test, pass its file or directory to `v run scripts/run_validation.vsh tests`.
+The V3 validation command runs the suite in both modes and compiles/runs each new public-import
 example twice, then checks the optimized deterministic benchmark. A compiler
 version mismatch is an error with a recovery instruction, not a silent fallback.
 
