@@ -8,7 +8,7 @@ const examples = ['object_pool', 'buffer_pool', 'range_allocator', 'linear_alloc
 const benchmark_operations = '1000000'
 const quick_benchmark_operations = '50000'
 
-fn execute(compiler string, args []string) ! {
+fn run_command(compiler string, args []string) ! {
 	mut child := os.new_process(compiler)
 	child.set_args(args)
 	child.run()
@@ -49,7 +49,7 @@ fn run_samples(args []string) ! {
 
 	if args[0] == 'examples' {
 		for example in examples {
-			execute(compiler, ['run', os.join_path(root, 'examples', example)])!
+			run_command(compiler, ['run', os.join_path(root, 'examples', example)])!
 		}
 		return
 	}
@@ -61,8 +61,8 @@ fn run_samples(args []string) ! {
 		else { count }
 	}
 
-	execute(compiler, ['version'])!
-	execute(compiler, ['-prod', 'run', os.join_path(root, 'benchmarks'), operations])!
+	run_command(compiler, ['version'])!
+	run_command(compiler, ['-prod', 'run', os.join_path(root, 'benchmarks'), operations])!
 }
 
 run_samples(os.args[1..]) or {
