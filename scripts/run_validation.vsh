@@ -89,7 +89,15 @@ fn run_validation(args []string) ! {
 	os.symlink(root, os.join_path(namespace, 'memory'))!
 	os.setenv('VMODULES', temporary, true)
 	vexe := os.getenv('VEXE')
-	compiler := if vexe == '' { @VEXE } else { vexe }
+	selected := os.getenv('MEMORY_VALIDATION_COMPILER')
+	compiler := if selected != '' {
+		selected
+	} else if vexe != '' {
+		vexe
+	} else {
+		@VEXE
+	}
+	os.setenv('VEXE', compiler, true)
 	match mode {
 		'tests' {
 			target := args[1] or { '' }
