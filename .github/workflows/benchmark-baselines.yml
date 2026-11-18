@@ -46,7 +46,7 @@ jobs:
           {
             printf 'ref=%s commit=%s platform=%s/%s build=-prod\n' \
               "$GITHUB_REF_NAME" "$GITHUB_SHA" "$RUNNER_OS" "$RUNNER_ARCH"
-            ./scripts/run_benchmarks.sh 250000
+            v run scripts/run_samples.vsh benchmarks 250000
           } | tee benchmark-results-${{ runner.os }}.txt
       - name: Upload benchmark baseline
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

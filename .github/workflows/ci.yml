@@ -50,9 +50,10 @@ jobs:
       - name: Test
         run: v test .
       - name: Run examples
-        run: ./scripts/run_examples.sh
+        run: v run scripts/run_samples.vsh examples
       - name: Run deterministic benchmark smoke test
-        run: ./scripts/run_benchmarks.sh --quick | tee benchmark-smoke.txt
+        shell: bash
+        run: v run scripts/run_samples.vsh benchmarks --quick | tee benchmark-smoke.txt
       - name: Upload benchmark smoke results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -95,17 +96,9 @@ jobs:
       - name: Run allocator tests
         run: v test .
       - name: Run public API examples
-        run: |
-          v run examples/object_pool
-          v run examples/buffer_pool
-          v run examples/range_allocator
-          v run examples/linear_allocator
-          v run examples/ring_allocator
-          v run examples/buddy_allocator
-          v run examples/synchronized_allocators
-          v run examples/workspaces
-          v run examples/deferred_ring
-          v run examples/deferred_jobs
+        run: v run scripts/run_samples.vsh examples
+      - name: Run quick allocator benchmarks
+        run: v run scripts/run_samples.vsh benchmarks --quick
 
   pinned-v3:
     name: Pinned V / ordinary and strict V3 / Linux
