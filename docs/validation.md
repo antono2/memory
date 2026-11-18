@@ -14,7 +14,7 @@ do not change the global module installation. `VEXE` selects the test/example/
 benchmark compiler; `scripts/run_v3.sh` also verifies its pinned revision.
 
 ```sh
-python3 scripts/test_compatibility.py
+v run scripts/compatibility.vsh --self-test
 python3 scripts/test_doctor.py
 v fmt -verify .
 v vet .
