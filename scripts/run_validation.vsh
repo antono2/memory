@@ -7,7 +7,7 @@ const repeated_examples = ['workspaces', 'deferred_ring', 'deferred_jobs']
 const example_repetitions = 2
 const quick_benchmark_operations = '50000'
 
-fn execute(executable string, args []string) ! {
+fn run_command(executable string, args []string) ! {
 	mut child := os.new_process(executable)
 	child.set_args(args)
 	child.run()
@@ -50,25 +50,25 @@ fn sanitize(compiler string, root string, thread_only bool) ! {
 	}
 	options << ['-cc', sanitizer, '-cflags', flag, '-cflags', sanitizer_frame_flag, '-ldflags',
 		flag, 'test', target]
-	execute(compiler, options)!
+	run_command(compiler, options)!
 }
 
 fn test_v3(compiler string, root string, temporary string) ! {
 	scripts := os.join_path(root, 'scripts')
-	execute(compiler, ['run', os.join_path(scripts, 'compatibility.vsh'), '--profile', 'v3'])!
-	execute(compiler, ['run', os.join_path(scripts, 'doctor.vsh'), '--v', compiler, '--profile',
+	run_command(compiler, ['run', os.join_path(scripts, 'compatibility.vsh'), '--profile', 'v3'])!
+	run_command(compiler, ['run', os.join_path(scripts, 'doctor.vsh'), '--v', compiler, '--profile',
 		'v3', '--modules', temporary])!
-	execute(compiler, ['test', root])!
-	execute(compiler, ['-new-compiler', 'test', root])!
+	run_command(compiler, ['test', root])!
+	run_command(compiler, ['-new-compiler', 'test', root])!
 	for example in repeated_examples {
 		executable := os.join_path(temporary, example)
 		source := os.join_path(root, 'examples', example)
 		for _ in 0 .. example_repetitions {
-			execute(compiler, ['-new-compiler', '-o', executable, source])!
-			execute(executable, [])!
+			run_command(compiler, ['-new-compiler', '-o', executable, source])!
+			run_command(executable, [])!
 		}
 	}
-	execute(compiler, ['-new-compiler', '-prod', 'run', os.join_path(root, 'benchmarks'),
+	run_command(compiler, ['-new-compiler', '-prod', 'run', os.join_path(root, 'benchmarks'),
 		quick_benchmark_operations])!
 }
 
@@ -101,7 +101,7 @@ fn run_validation(args []string) ! {
 	match mode {
 		'tests' {
 			target := args[1] or { '' }
-			execute(compiler, ['test', if target == '' { root } else { target }])!
+			run_command(compiler, ['test', if target == '' { root } else { target }])!
 		}
 		'sanitizers' {
 			sanitize(compiler, root, false)!
