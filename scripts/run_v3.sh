@@ -9,7 +9,7 @@ v_compiler=${VEXE:-v}
 mkdir -p "$modules_dir/antono2"
 ln -s "$repo_dir" "$modules_dir/antono2/memory"
 export VMODULES="$modules_dir"
-python3 "$repo_dir/scripts/compatibility.py" --profile v3
+"$v_compiler" run "$repo_dir/scripts/compatibility.vsh" --profile v3
 python3 "$repo_dir/scripts/doctor.py" --v "$v_compiler" --profile v3 --modules "$modules_dir"
 "$v_compiler" test "$repo_dir"
 "$v_compiler" -new-compiler test "$repo_dir"
