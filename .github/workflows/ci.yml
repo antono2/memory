@@ -110,7 +110,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: modules/antono2/memory
-      - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
+      - id: bootstrap
+        uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
       - name: Resolve compiler pins
@@ -135,9 +136,10 @@ jobs:
         run: make -C "$GITHUB_WORKSPACE/.ci-v-source" local=1
       - name: Verify both compiler modes and public consumers
         env:
-          VEXE: ${{ github.workspace }}/.ci-v-source/v
+          MEMORY_VALIDATION_COMPILER: ${{ github.workspace }}/.ci-v-source/v
+          BOOTSTRAP_V: ${{ steps.bootstrap.outputs.v-bin-path }}
           VJOBS: 4
-        run: sh scripts/run_v3.sh
+        run: '"$BOOTSTRAP_V" run scripts/run_validation.vsh v3'
 
   sanitizers:
     name: Sanitizers / Linux
@@ -160,6 +162,6 @@ jobs:
         with:
           version: ${{ steps.compat.outputs.v_release }}
       - name: Run AddressSanitizer and UndefinedBehaviorSanitizer
-        run: ./scripts/run_sanitizers.sh
+        run: v run scripts/run_validation.vsh sanitizers
       - name: Run ThreadSanitizer on synchronized allocators
-        run: ./scripts/run_thread_sanitizer.sh
+        run: v run scripts/run_validation.vsh thread-sanitizer
