@@ -20,8 +20,8 @@ v fmt -verify .
 v vet .
 v doc -f none -m .
 ./scripts/run_tests.sh
-./scripts/run_examples.sh
-./scripts/run_benchmarks.sh --quick
+v run scripts/run_samples.vsh examples
+v run scripts/run_samples.vsh benchmarks --quick
 ./scripts/run_sanitizers.sh
 ./scripts/run_thread_sanitizer.sh
 VEXE=/path/to/pinned/v ./scripts/run_v3.sh

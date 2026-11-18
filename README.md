@@ -359,7 +359,7 @@ v run examples/synchronized_allocators
 ```
 
 When working from a source checkout rather than an installed V module, run
-`./scripts/run_examples.sh`; the script creates an isolated module path and does
+`v run scripts/run_samples.vsh examples`; the script creates an isolated module path and does
 not modify the user's installed modules.
 
 ## Reusable workspaces and deferred retirement
@@ -375,7 +375,7 @@ jobs, streaming backpressure and shutdown. Run `examples/workspaces`,
 Run the deterministic churn workloads with production compiler optimizations:
 
 ```sh
-./scripts/run_benchmarks.sh
+v run scripts/run_samples.vsh benchmarks
 ```
 
 Pass an operation count to shorten or extend a run, or use `--quick` for the CI
@@ -402,8 +402,8 @@ toolchains, operation counts and trace versions.
 v fmt -verify .
 v vet .
 ./scripts/run_tests.sh
-./scripts/run_examples.sh
-./scripts/run_benchmarks.sh --quick
+v run scripts/run_samples.vsh examples
+v run scripts/run_samples.vsh benchmarks --quick
 ./scripts/run_sanitizers.sh
 ./scripts/run_thread_sanitizer.sh
 VEXE=/path/to/pinned/v ./scripts/run_v3.sh

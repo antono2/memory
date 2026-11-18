@@ -1,15 +1,5 @@
 #!/usr/bin/env sh
-# Runs every public-import example against this checkout.
-# Uses temporary module links so examples do not resolve an older installed version.
+# Compatibility entry for the V sample runner.
 set -eu
-
-repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-modules_dir=$(mktemp -d "${TMPDIR:-/tmp}/v-memory-modules.XXXXXX")
-trap 'rm -rf "$modules_dir"' EXIT HUP INT TERM
-
-mkdir -p "$modules_dir/antono2"
-ln -s "$repo_dir" "$modules_dir/antono2/memory"
-
-for example in object_pool buffer_pool range_allocator linear_allocator ring_allocator buddy_allocator synchronized_allocators workspaces deferred_ring deferred_jobs; do
-	VMODULES="$modules_dir" "${VEXE:-v}" run "$repo_dir/examples/$example"
-done
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec "${VEXE:-v}" run "$script_dir/run_samples.vsh" examples "$@"

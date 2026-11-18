@@ -62,7 +62,7 @@ secure erasure: overwrite sensitive bytes explicitly according to application
 requirements. The example does not silently grow, trim, retry, or allocate a
 fallback buffer.
 
-Run `./scripts/run_examples.sh` or `v run examples/workspaces` from a correctly
+Run `v run scripts/run_samples.vsh examples` or `v run examples/workspaces` from a correctly
 installed module. The example includes a retained workspace, two simultaneous
 leases, exhaustion, an oversized request, and an independently owned output.
 
