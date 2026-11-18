@@ -15,7 +15,7 @@ benchmark compiler; `scripts/run_v3.sh` also verifies its pinned revision.
 
 ```sh
 v run scripts/compatibility.vsh --self-test
-python3 scripts/test_doctor.py
+v run scripts/doctor.vsh --self-test
 v fmt -verify .
 v vet .
 v doc -f none -m .
