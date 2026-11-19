@@ -343,6 +343,10 @@ The Vulkan module owns API-specific handles and policy while this module remains
 dependency-free and useful for host memory, files, parsers, resource tables
 and other bounded allocation domains.
 
+For runnable GPU integrations, see the [buffer suballocation and upload example](https://github.com/antono2/vulkan_memory_allocator/tree/master/examples/buffer_suballocation)
+and [Torus Trooper’s mapped vertex buffers](https://github.com/antono2/torus_trooper/blob/main/runtime/vulkan_memory.v),
+which use these allocators through `antono2.vkmemalloc`.
+
 ## Examples
 
 Runnable actor, retained-buffer, free-range, frame-arena and streaming-upload
