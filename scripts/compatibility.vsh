@@ -4,13 +4,17 @@ import os
 import rand
 import x.json2
 
+// Compatibility pins use major/minor/patch versions and full SHA-1 object IDs.
+const version_components = 3
+const git_object_id_hex_digits = 40
+
 fn name_is_safe(name string) bool {
 	return name.len > 0 && name.bytes().all((it >= `a` && it <= `z`) || it.is_digit() || it == `_`)
 }
 
 fn release_is_valid(version string) bool {
 	parts := version.split('.')
-	return parts.len == 3 && parts.all(it.len > 0 && it.bytes().all(it.is_digit()))
+	return parts.len == version_components && parts.all(it.len > 0 && it.bytes().all(it.is_digit()))
 }
 
 fn manifest(path string) !map[string]json2.Any {
@@ -49,7 +53,8 @@ fn resolve(root string, profile string) !map[string]string {
 		if key in ['v', 'vc', 'tcc', 'volk', 'generator'] || key.ends_with('_v')
 			|| key.ends_with('_vc') || key.ends_with('_tcc') {
 			commit := value.str()
-			if commit.len != 40 || !commit.bytes().all(it.is_digit() || (it >= `a` && it <= `f`)) {
+			if commit.len != git_object_id_hex_digits
+				|| !commit.bytes().all(it.is_digit() || (it >= `a` && it <= `f`)) {
 				return error('${key} must be an immutable Git commit')
 			}
 		}
@@ -104,7 +109,17 @@ fn resolve(root string, profile string) !map[string]string {
 }
 
 fn revision(checkout string, ref string) !string {
-	return os.execute_opt('git -C ${os.quoted_path(checkout)} rev-parse --verify ${os.quoted_path(ref)}')!.output.trim_space()
+	mut git := os.new_process('git')
+	git.set_args(['-C', checkout, 'rev-parse', '--verify', '--quiet', ref])
+	git.set_redirect_stdio()
+	git.run()
+	defer { git.close() }
+	commit := git.stdout_slurp().trim_space()
+	git.wait()
+	if git.code != 0 || commit == '' {
+		return error('Could not resolve ${ref} in ${checkout}')
+	}
+	return commit
 }
 
 fn verify_modules(outputs map[string]string, modules string) ! {
@@ -152,7 +167,8 @@ fn self_test(root string) ! {
 	expect_invalid(work, 'stable', 'Unsafe compatibility output')!
 	os.write_file(path, '{"schema_version":1,"v_release":"0.5.2"}')!
 	expect_invalid(work, 'v3', 'V3 profile is not configured')!
-	os.write_file(path, '{"schema_version":1,"v3_v":"' + 'a'.repeat(40) + '"}')!
+	os.write_file(path,
+		'{"schema_version":1,"v3_v":"' + 'a'.repeat(git_object_id_hex_digits) + '"}')!
 	expect_invalid(work, 'v3', 'v3_vc')!
 	expect_invalid(work, 'stable', 'Stable compiler profile is not configured')!
 	println('Compatibility profiles and refusal checks passed.')
@@ -164,7 +180,10 @@ fn run_cli() ! {
 	parser.description('Validate and resolve tested build profiles.')
 	root := parser.string('root', 0, os.dir(@DIR), 'project root')
 	profile := parser.string('profile', 0, 'stable', 'stable, v3, or master')
-	output_path := parser.string('github-output', 0, '', 'append pins to this GitHub output file')
+	mut output_path := parser.string('github-output', 0, '',
+		'append pins to this GitHub output file')
+	github_actions := parser.bool('github-actions', 0, false,
+		'append pins to the GITHUB_OUTPUT file from the environment')
 	key := parser.string('get', 0, '', 'print a single pin')
 	modules := parser.string('modules', 0, '', 'verify module checkouts in this directory')
 	test := parser.bool('self-test', 0, false, 'run the profile and refusal fixtures')
@@ -178,6 +197,15 @@ fn run_cli() ! {
 	if test {
 		self_test(root)!
 		return
+	}
+	if github_actions {
+		if output_path != '' {
+			return error('Use either --github-actions or --github-output')
+		}
+		output_path = os.getenv('GITHUB_OUTPUT')
+		if output_path == '' {
+			return error('GITHUB_OUTPUT is required with --github-actions')
+		}
 	}
 	outputs := resolve(root, profile)!
 	if modules != '' {
