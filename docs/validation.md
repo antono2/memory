@@ -45,7 +45,11 @@ interaction. The new queue and pool output methods are externally synchronized
 APIs and do not claim concurrent access safety.
 
 Benchmarks print their compiler version through the runner and use `-prod`.
-Store the output with the source commit, host/OS, compiler mode and operation
-count. Trace hashes and checksums enforce equivalence; timings remain diagnostic.
+Pass `--report FILE` to save the output while it runs.
+`v run scripts/run_samples.vsh benchmarks --quick --report benchmark-smoke.txt`
+records the same workload as the Linux smoke job. Release CI uses `--baseline`
+for the fixed 250,000-operation workload and includes the Git ref, commit, and
+runner platform in its report. Trace hashes and checksums enforce equivalence,
+and timings are diagnostic.
 Public CI artifacts provide native platform evidence. Local Linux checks alone
 do not establish native Windows or macOS behavior, or V3 support on those systems.
